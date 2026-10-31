@@ -27,6 +27,7 @@ const STATE_LABEL = {
   silent: 'Silent',
   listening: 'Listening',
   noisy: 'Noisy',
+  stalled: 'No sound, tap to retry',
 }
 
 const dbToX = (db: number) => `${Math.max(0, Math.min(100, ((db + 80) / 80) * 100))}%`
@@ -51,7 +52,7 @@ export function Debug({ go }: { go: (route: string) => void }) {
         {micOff && <button className="btn btn-pill" onClick={start}>Start mic</button>}
         <span className="spacer" />
         <span className="muted tnum">
-          {mic.sampleRate ? `${mic.sampleRate / 1000} kHz · latency ${mic.latencyMs.toFixed(0)} ms · ` : ''}
+          {mic.sampleRate ? `${mic.contextState} · ${mic.trackState} · ${mic.sampleRate / 1000} kHz · ${mic.latencyMs.toFixed(0)} ms · ` : ''}
           offset {settings.latencyOffsetMs ?? 0} ms
         </span>
       </BackBar>

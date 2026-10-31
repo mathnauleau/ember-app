@@ -8,7 +8,7 @@ export type Thresholds = {
 }
 
 export const DEFAULT_THRESHOLDS: Thresholds = {
-  floor: -52,
+  floor: -66,
   noisy: -34,
   close: 0.78,
   margin: 0.08,
@@ -23,4 +23,6 @@ export const PITCH = {
   lowClarityReadings: 15, // about 0.5 s of sound with no clear pitch means noisy
   floorMeasureMs: 1000,
   silentRatio: 2, // silent = RMS under twice the measured floor
+  floorAdapt: 0.1, // how fast the floor drops when the room is quieter than first measured
+  stalledMs: 3000, // this long without audio counts as a stalled mic
 }

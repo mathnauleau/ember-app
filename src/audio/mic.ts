@@ -2,9 +2,9 @@ import { PitchDetector } from 'pitchy'
 import { PITCH } from '../config/thresholds'
 import { dbToRms, isOctaveJump, median, rmsOf } from './pitch'
 
-const { minClarity, smoothing, lowClarityReadings, floorMeasureMs, silentRatio, readingMs, fftSize } = PITCH
+const { minClarity, smoothing, lowClarityReadings, floorMeasureMs, silentRatio, floorAdapt, stalledMs, readingMs, fftSize } = PITCH
 
-export type MicStatus = 'idle' | 'starting' | 'measuring' | 'silent' | 'listening' | 'noisy'
+export type MicStatus = 'idle' | 'starting' | 'measuring' | 'silent' | 'listening' | 'noisy' | 'stalled'
 
 export type MicReading = {
   status: MicStatus
@@ -16,6 +16,8 @@ export type MicReading = {
   octaveJumps: number
   sampleRate: number
   latencyMs: number
+  contextState: string
+  trackState: string
 }
 
 export type MicConfig = { silentDb: number; noisyDb: number; minHz: number; maxHz: number }
@@ -30,6 +32,8 @@ export const IDLE_READING: MicReading = {
   octaveJumps: 0,
   sampleRate: 0,
   latencyMs: 0,
+  contextState: '',
+  trackState: '',
 }
 
 let sharedContext: AudioContext | null = null
@@ -86,7 +90,8 @@ export async function startMic(options: {
   analyser.connect(mute)
   mute.connect(context.destination)
 
-  stream.getAudioTracks()[0]?.addEventListener('ended', options.onStopped)
+  const track = stream.getAudioTracks()[0]
+  track?.addEventListener('ended', options.onStopped)
 
   // iOS suspends the context on interruptions such as a call or switching apps.
   const resumeWhenVisible = () => {
@@ -105,12 +110,25 @@ export async function startMic(options: {
   let unclear = 0
   let status: MicStatus = 'measuring'
   let lastMinHz = 0
+  let lastSoundAt = performance.now()
 
   const read = () => {
-    if (context.state !== 'running') return { rawHz: 0, clarity: 0, rms: 0 }
+    const now = performance.now()
+    if (context.state !== 'running') {
+      void context.resume()
+      if (now - lastSoundAt >= stalledMs) status = 'stalled'
+      return { rawHz: 0, clarity: 0, rms: 0 }
+    }
 
     analyser.getFloatTimeDomainData(buffer)
     const rms = rmsOf(buffer)
+    if (rms > 0) {
+      lastSoundAt = now
+      if (status === 'stalled') status = floorRms === null ? 'measuring' : 'silent'
+    } else if (now - lastSoundAt >= stalledMs) {
+      status = 'stalled'
+      return { rawHz: 0, clarity: 0, rms }
+    }
     const [rawHz, clarity] = detector.findPitch(buffer, context.sampleRate)
 
     if (floorRms === null) {
@@ -131,6 +149,9 @@ export async function startMic(options: {
       recent.length = 0
       lastMinHz = minHz
     }
+
+    // Playing during the first second inflates the floor, so let it settle back down.
+    if (rms > 0 && rms < floorRms) floorRms += (rms - floorRms) * floorAdapt
 
     const noisyRoom = floorRms > dbToRms(noisyDb)
     if (rms < Math.max(floorRms * silentRatio, dbToRms(silentDb))) {
@@ -171,6 +192,8 @@ export async function startMic(options: {
       octaveJumps,
       sampleRate: context.sampleRate,
       latencyMs: ((context.baseLatency ?? 0) + (context.outputLatency ?? 0)) * 1000,
+      contextState: context.state,
+      trackState: !track ? 'none' : track.muted ? 'muted' : track.readyState,
     })
   }, readingMs)
 

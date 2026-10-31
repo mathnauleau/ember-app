@@ -3,6 +3,7 @@ import { DEFAULT_THRESHOLDS, type Thresholds } from '../config/thresholds'
 
 const KEY = 'ember.progress'
 const BACKUP_VERSION = 1
+const THRESHOLDS_REV = 2 // bump to discard saved thresholds when their defaults change
 
 export type Settings = {
   defaultMinutes: 15 | 10
@@ -23,6 +24,7 @@ export type SavedSession = {
 export type Progress = {
   settings: Settings
   thresholds: Thresholds
+  thresholdsRev: number
   lastBackupOn: string | null
   session: SavedSession | null
 }
@@ -37,6 +39,7 @@ export const DEFAULT_PROGRESS: Progress = {
     latencyOffsetSetOn: null,
   },
   thresholds: DEFAULT_THRESHOLDS,
+  thresholdsRev: THRESHOLDS_REV,
   lastBackupOn: null,
   session: null,
 }
@@ -63,7 +66,7 @@ export function sanitize(raw: unknown): Progress {
   const d = DEFAULT_PROGRESS
   const r = isRecord(raw) ? raw : {}
   const s = isRecord(r.settings) ? r.settings : {}
-  const t = isRecord(r.thresholds) ? r.thresholds : {}
+  const t = isRecord(r.thresholds) && r.thresholdsRev === THRESHOLDS_REV ? r.thresholds : {}
   return {
     settings: {
       defaultMinutes: s.defaultMinutes === 10 ? 10 : 15,
@@ -80,6 +83,7 @@ export function sanitize(raw: unknown): Progress {
       margin: num(t.margin, d.thresholds.margin),
       onTime: num(t.onTime, d.thresholds.onTime),
     },
+    thresholdsRev: THRESHOLDS_REV,
     lastBackupOn: strOrNull(r.lastBackupOn),
     session: readSession(r.session),
   }

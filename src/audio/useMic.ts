@@ -21,6 +21,8 @@ export function useMic({ active = true, range = FULL_RANGE } = {}) {
 
   const open = useCallback(async () => {
     const id = ++session.current
+    stopMic.current?.()
+    stopMic.current = null
     setError(null)
     setReading({ ...IDLE_READING, status: 'starting' })
     try {
@@ -57,6 +59,14 @@ export function useMic({ active = true, range = FULL_RANGE } = {}) {
     if (active && audioUnlocked()) void open()
     return stop
   }, [active, open, stop])
+
+  // A tap is what iOS needs to wake stalled audio, so any tap restarts the mic.
+  const stalled = reading.status === 'stalled'
+  useEffect(() => {
+    if (!stalled) return
+    window.addEventListener('pointerdown', start, { once: true })
+    return () => window.removeEventListener('pointerdown', start)
+  }, [stalled, start])
 
   return { reading, error, start }
 }

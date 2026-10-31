@@ -76,7 +76,7 @@ export function TuneStep({ go }: { go: (route: string) => void }) {
           signal={tuner.signal}
           inTune={tuner.inTune}
           done={tuner.done}
-          noisy={status === 'noisy'}
+          micStatus={status}
           lock={lock}
           onLock={setLock}
         />

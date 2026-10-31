@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { MicStatus } from '../audio/mic'
 import { STRINGS } from '../audio/pitch'
 import { Fire } from '../components/Fire'
 import { Gauge } from '../components/Gauge'
@@ -10,24 +11,28 @@ export type TunerProps = {
   signal: boolean
   inTune: boolean
   done: number[]
-  noisy: boolean
+  micStatus: MicStatus
   lock: number | null
   onLock: (string: number | null) => void
 }
 
-function statusOf({ signal, inTune, cents, noisy }: TunerProps) {
-  if (!signal) return noisy ? "It's a little loud in here" : 'Pluck a string'
+function statusOf({ signal, inTune, cents, micStatus }: TunerProps) {
+  if (micStatus === 'stalled') return "The mic isn't sending any sound"
+  if (micStatus === 'measuring') return 'Stay quiet for a moment'
+  if (!signal) return micStatus === 'noisy' ? "It's a little loud in here" : 'Pluck a string'
   if (inTune) return 'In tune'
   return cents < 0 ? 'A little flat · tighten slowly' : 'A little sharp · loosen slowly'
 }
 
-function centsLabel({ signal, cents }: TunerProps) {
+function centsLabel({ signal, cents, micStatus }: TunerProps) {
+  if (micStatus === 'stalled') return 'Tap anywhere to wake it'
+  if (micStatus === 'measuring') return 'Hearing the room'
   if (!signal) return 'Any one is fine'
   return `${cents >= 0 ? '+' : '−'}${Math.abs(Math.round(cents))} cents`
 }
 
 export function Tuner(props: TunerProps) {
-  const { active, signal, inTune, done, noisy, lock, onLock, cents } = props
+  const { active, signal, inTune, done, micStatus, lock, onLock, cents } = props
   const string = STRINGS[active]
   const locked = lock !== null
   const noteState = !signal ? 'off' : inTune ? 'intune' : ''
@@ -41,7 +46,7 @@ export function Tuner(props: TunerProps) {
         </span>
         <span className="chip chip-quiet">
           <Mic size={15} color="currentColor" />
-          {noisy ? 'Busy room' : 'Mic on'}
+          {micStatus === 'noisy' ? 'Busy room' : 'Mic on'}
         </span>
       </div>
 
