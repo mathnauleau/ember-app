@@ -89,7 +89,7 @@ export function Debug({ go }: { go: (route: string) => void }) {
           <section className="debug-block">
             <div className="debug-head">
               <span className="debug-label">Input level</span>
-              <span className="tnum">{dbLabel(mic.rms)}</span>
+              <span className="tnum">{mic.status !== 'idle' && mic.rms === 0 ? 'digital silence' : dbLabel(mic.rms)}</span>
             </div>
             <div className="meter">
               <div className="meter-fill" style={{ width: dbToX(rmsToDb(mic.rms)) }} />
@@ -100,7 +100,7 @@ export function Debug({ go }: { go: (route: string) => void }) {
               <span>│ floor {signed(th.floor)} dB</span>
               <span>┆ noisy threshold</span>
               <span className="spacer" />
-              <span className="tnum">room {mic.floorRms === null ? '—' : dbLabel(mic.floorRms)} · jumps {mic.octaveJumps}</span>
+              <span className="tnum">room {mic.floorRms === null ? '—' : mic.floorRms === 0 ? 'digital silence' : dbLabel(mic.floorRms)} · jumps {mic.octaveJumps}</span>
             </div>
           </section>
 

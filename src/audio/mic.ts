@@ -129,34 +129,28 @@ export async function startMic(options: {
   let unclear = 0
   let status: MicStatus = 'measuring'
   let lastMinHz = 0
-  let lastSoundAt = performance.now()
+  let lastLiveAt = performance.now()
 
   const read = () => {
     const now = performance.now()
-    if (context.state !== 'running') {
-      void context.resume()
-      if (now - lastSoundAt >= stalledMs) status = 'stalled'
+    // Only an interrupted context or muted track counts as stalled. Exact zeros don't:
+    // iPadOS sends digital silence from a quiet room, and the mic is fine.
+    if (context.state !== 'running' || track?.muted) {
+      if (context.state !== 'running') void context.resume()
+      if (now - lastLiveAt >= stalledMs) status = 'stalled'
       return { rawHz: 0, clarity: 0, rms: 0 }
     }
+    lastLiveAt = now
+    if (status === 'stalled') status = floorRms === null ? 'measuring' : 'silent'
 
     analyser.getFloatTimeDomainData(buffer)
     const rms = rmsOf(buffer)
-    if (rms > 0) {
-      lastSoundAt = now
-      if (status === 'stalled') status = floorRms === null ? 'measuring' : 'silent'
-    } else if (now - lastSoundAt >= stalledMs) {
-      status = 'stalled'
-      return { rawHz: 0, clarity: 0, rms }
-    }
     const [rawHz, clarity] = detector.findPitch(buffer, context.sampleRate)
 
     if (floorRms === null) {
-      // The analyser reads digital zero until the first mic samples arrive.
-      if (rms > 0) {
-        floorStartedAt ??= performance.now()
-        floorSamples.push(rms)
-      }
-      if (floorStartedAt !== null && performance.now() - floorStartedAt >= floorMeasureMs) {
+      floorStartedAt ??= now
+      floorSamples.push(rms)
+      if (now - floorStartedAt >= floorMeasureMs) {
         floorRms = median(floorSamples)
         status = 'silent'
       }
