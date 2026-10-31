@@ -71,10 +71,10 @@ export function Logs({ total, done, lit = 0 }: { total: number; done: number; li
   )
 }
 
-export function Dialog({ label, children }: { label: string; children: ReactNode }) {
+export function Dialog({ label, narrow, children }: { label: string; narrow?: boolean; children: ReactNode }) {
   return (
     <div className="scrim">
-      <div className="dialog" role="dialog" aria-modal="true" aria-label={label}>
+      <div className={narrow ? 'dialog dialog-narrow' : 'dialog'} role="dialog" aria-modal="true" aria-label={label}>
         {children}
       </div>
     </div>

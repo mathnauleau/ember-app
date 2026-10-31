@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
-import { ArrowRight, Close, SkipForward, Volume } from '../components/icons'
-import { Logs } from '../components/ui'
+import { useState, type ReactNode } from 'react'
+import { ArrowRight, Close, SkipForward, Volume, VolumeOff } from '../components/icons'
+import { Dialog, Logs } from '../components/ui'
 import { updateSettings, useProgress } from '../store/progress'
 
 export function SessionShell(props: {
@@ -12,22 +12,32 @@ export function SessionShell(props: {
   timeMuted?: boolean
   logsDone: number
   logsLit: number
+  skipLabel?: string
   nextLabel: string
-  onPause: () => void
+  centered?: boolean
+  onPauseChange?: (paused: boolean) => void
+  onLeave: () => void
   onSkip: () => void
   onNext: () => void
   children: ReactNode
 }) {
   const { sound } = useProgress().settings
+  const [paused, setPaused] = useState(false)
+
+  const pause = (next: boolean) => {
+    setPaused(next)
+    props.onPauseChange?.(next)
+  }
+
   return (
-    <main className="screen">
+    <main className={props.centered ? 'screen screen-centered' : 'screen'}>
       <header className="topbar">
-        <button className="btn btn-icon" aria-label="Pause session" onClick={props.onPause}>
+        <button className="btn btn-icon" aria-label="Pause session" onClick={() => pause(true)}>
           <Close />
         </button>
         <div className="shell-step">
           <span className="topbar-title">{props.step}</span>
-          <span className="shell-phase">Step {props.stepNumber} of {props.totalSteps} · {props.phase}</span>
+          <span className="shell-phase tnum">Step {props.stepNumber} of {props.totalSteps} · {props.phase}</span>
         </div>
         <Logs total={props.totalSteps} done={props.logsDone} lit={props.logsLit} />
         <div className="shell-time">
@@ -41,11 +51,16 @@ export function SessionShell(props: {
       <footer className="bottombar">
         <button className="btn btn-secondary" onClick={props.onSkip}>
           <SkipForward size={20} />
-          Skip
+          {props.skipLabel ?? 'Skip'}
         </button>
         <span className="spacer" />
-        <button className="btn btn-pill" aria-pressed={sound} onClick={() => updateSettings({ sound: !sound })}>
-          <Volume color="var(--ember-500)" />
+        <button
+          className="btn btn-pill"
+          aria-label="Toggle crackle sound"
+          aria-pressed={sound}
+          onClick={() => updateSettings({ sound: !sound })}
+        >
+          {sound ? <Volume color="var(--ember-500)" /> : <VolumeOff color="var(--cream-500)" />}
           Crackle {sound ? 'on' : 'off'}
         </button>
         <button className="btn btn-primary compact" onClick={props.onNext}>
@@ -53,6 +68,17 @@ export function SessionShell(props: {
           <ArrowRight color="var(--ember-500)" />
         </button>
       </footer>
+
+      {paused && (
+        <Dialog label="Pause the fire?" narrow>
+          <h2 className="dialog-title">Pause the fire?</h2>
+          <p className="dialog-body">Tonight's logs are kept. You can pick up from {props.step} whenever you like.</p>
+          <div className="dialog-actions dialog-actions-gap">
+            <button className="btn btn-primary medium" onClick={() => pause(false)}>Keep playing</button>
+            <button className="btn btn-secondary" onClick={props.onLeave}>Pause for now</button>
+          </div>
+        </Dialog>
+      )}
     </main>
   )
 }

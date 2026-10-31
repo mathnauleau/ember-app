@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_PROGRESS, parseBackup, sanitize, serializeBackup } from './progress'
-import { median } from '../audio/debugSignal'
+import { median } from '../audio/pitch'
 import { formatDay, today } from '../lib/dates'
 
 describe('backup', () => {

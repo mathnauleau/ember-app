@@ -1,13 +1,6 @@
-import {
-  GRID_SLOTS,
-  LATENCY_MS,
-  NOTES,
-  PITCH_TARGET_NAME,
-  SAMPLE_RATE_KHZ,
-  TARGET_NAME,
-  TARGET_PITCH_CLASSES,
-  useDebugSignal,
-} from '../audio/debugSignal'
+import { GRID_SLOTS, NOTES, TARGET_NAME, TARGET_PITCH_CLASSES, useDebugSignal } from '../audio/debugSignal'
+import { centsBetween, nearestStringIndex, rmsToDb, STRINGS } from '../audio/pitch'
+import { useMic } from '../audio/useMic'
 import { BackBar } from '../components/ui'
 import type { Thresholds } from '../config/thresholds'
 import { updateThresholds, useProgress } from '../store/progress'
@@ -27,14 +20,26 @@ const SLIDERS: {
   { key: 'onTime', label: 'On time within', min: 20, max: 150, step: 5, show: (v) => `±${v} ms` },
 ]
 
+const STATE_LABEL = {
+  idle: 'Mic off',
+  starting: 'Starting',
+  measuring: 'Measuring floor',
+  silent: 'Silent',
+  listening: 'Listening',
+  noisy: 'Noisy',
+}
+
 const dbToX = (db: number) => `${Math.max(0, Math.min(100, ((db + 80) / 80) * 100))}%`
 const signed = (v: number, digits = 0) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(digits)}`
+const dbLabel = (rms: number) => (rms > 0 ? `${signed(rmsToDb(rms))} dB` : '— dB')
 
 export function Debug({ go }: { go: (route: string) => void }) {
   const { settings, thresholds: th } = useProgress()
+  const { reading: mic, error, start } = useMic()
   const sig = useDebugSignal()
 
-  const state = sig.db < th.floor + 4 ? 'Silent' : sig.db > th.noisy + 10 ? 'Noisy' : 'Listening'
+  const micOff = mic.status === 'idle'
+  const string = mic.hz === null ? null : STRINGS[nearestStringIndex(mic.hz)]
   const [best, ...rest] = sig.scores.map((s) => s.value)
   const margin = best - Math.max(...rest)
   const holding = best >= th.close && margin >= th.margin
@@ -42,10 +47,12 @@ export function Debug({ go }: { go: (route: string) => void }) {
   return (
     <main className="screen screen-flat">
       <BackBar label="Back" title="Debug" onBack={() => go('/settings')}>
-        <span className="chip chip-ember">{state}</span>
+        <span className="chip chip-ember">{STATE_LABEL[mic.status]}</span>
+        {micOff && <button className="btn btn-pill" onClick={start}>Start mic</button>}
         <span className="spacer" />
         <span className="muted tnum">
-          {SAMPLE_RATE_KHZ} kHz · latency {LATENCY_MS} ms · offset {settings.latencyOffsetMs ?? 0} ms
+          {mic.sampleRate ? `${mic.sampleRate / 1000} kHz · latency ${mic.latencyMs.toFixed(0)} ms · ` : ''}
+          offset {settings.latencyOffsetMs ?? 0} ms
         </span>
       </BackBar>
 
@@ -54,29 +61,35 @@ export function Debug({ go }: { go: (route: string) => void }) {
           <section className="debug-block">
             <div className="debug-head">
               <span className="debug-label">Input level</span>
-              <span className="tnum">{sig.db.toFixed(0)} dB</span>
+              <span className="tnum">{dbLabel(mic.rms)}</span>
             </div>
             <div className="meter">
-              <div className="meter-fill" style={{ width: dbToX(sig.db) }} />
+              <div className="meter-fill" style={{ width: dbToX(rmsToDb(mic.rms)) }} />
               <div className="meter-floor" style={{ left: dbToX(th.floor) }} />
               <div className="meter-noisy" style={{ left: dbToX(th.noisy) }} />
             </div>
             <div className="meter-key">
               <span>│ floor {signed(th.floor)} dB</span>
               <span>┆ noisy threshold</span>
+              <span className="spacer" />
+              <span className="tnum">room {mic.floorRms === null ? '—' : dbLabel(mic.floorRms)} · jumps {mic.octaveJumps}</span>
             </div>
           </section>
 
           <section className="debug-pitch ruled">
             <span className="debug-label debug-pitch-label">Pitch</span>
-            <span className="debug-hz tnum">{sig.hz.toFixed(2)}</span>
-            <span className="debug-unit">Hz → {PITCH_TARGET_NAME}</span>
-            <span className="debug-cents tnum">{signed(sig.cents, 1)}¢</span>
-            <span className="muted tnum">clarity {sig.clarity.toFixed(2)}</span>
+            <span className="debug-hz tnum">{mic.hz === null ? '—' : mic.hz.toFixed(2)}</span>
+            <span className="debug-unit">Hz → {string ? string.note + string.octave : '—'}</span>
+            <span className="debug-cents tnum">
+              {mic.hz !== null && string ? `${signed(centsBetween(mic.hz, string.hz), 1)}¢` : ''}
+            </span>
+            <span className="muted tnum">clarity {mic.clarity.toFixed(2)}</span>
           </section>
 
+          {error && <p className="debug-error" role="alert">{error}</p>}
+
           <section className="debug-block ruled">
-            <span className="debug-label">Chroma · target {TARGET_NAME}</span>
+            <span className="debug-label">Chroma · target {TARGET_NAME} · simulated</span>
             <div className="chroma">
               {sig.chroma.map((v, i) => (
                 <div
@@ -95,7 +108,7 @@ export function Debug({ go }: { go: (route: string) => void }) {
 
           <section className="debug-block ruled">
             <div className="debug-head">
-              <span className="debug-label">Onsets vs click · last 2 bars</span>
+              <span className="debug-label">Onsets vs click · simulated</span>
               <span className="tnum">median {signed(sig.medianOffsetMs)} ms</span>
             </div>
             <div className="onsets">
@@ -118,7 +131,7 @@ export function Debug({ go }: { go: (route: string) => void }) {
         </div>
 
         <div className="debug-controls">
-          <span className="debug-label">Chord scores (cosine)</span>
+          <span className="debug-label">Chord scores (cosine) · simulated</span>
           {sig.scores.map((s, i) => (
             <div key={s.name} className={i === 0 ? 'score target' : 'score'}>
               <span className="score-name">{s.name}</span>

@@ -184,5 +184,75 @@ input[type=range] { accent-color: var(--ember-500); }
 .home-copy { display: flex; flex-direction: column; gap: var(--space-6); }
 .home-links { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 
+/* Tuner */
+.tuner { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 12px var(--screen-pad-x) 24px; }
+.tuner-chips { display: flex; justify-content: center; gap: 10px; }
+.chip-mode { color: var(--cream-300); }
+.chip-quiet { border-color: var(--line-group); }
+.tuner-reading { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); }
+.tuner-note-row { display: flex; align-items: baseline; gap: 6px; }
+.tuner-note { font: 400 var(--fs-note)/.86 var(--font-display); color: var(--cream-100); transition: text-shadow .4s, color .4s; }
+.tuner-note.off { color: rgba(244,233,216,.35); }
+.tuner-note.intune { color: #ffe2b0; text-shadow: 0 0 48px rgba(240,140,60,.7), 0 0 12px rgba(255,200,130,.5); }
+.tuner-octave { font: 400 var(--fs-title)/1.55 var(--font-display); color: var(--cream-500); }
+.tuner-status-row { display: flex; align-items: baseline; gap: 14px; }
+.tuner-status { font: 400 32px/1.55 var(--font-display); color: var(--cream-100); }
+.tuner-status.intune { color: var(--ember-300); }
+.tuner-status.off { color: var(--cream-500); }
+.tuner-cents { font-size: var(--fs-reading); color: var(--cream-500); }
+.tuner-gauge { display: flex; justify-content: center; }
+
+.gauge { position: relative; width: min(820px, 100%); height: 112px; flex: none; }
+.gauge-tick { position: absolute; width: 1px; margin-left: -.5px; background: rgba(244,233,216,.26); }
+.gauge-tick.off { background: rgba(244,233,216,.12); }
+.gauge-sign { position: absolute; top: 34px; font: 400 36px/44px var(--font-display); color: var(--cream-500); }
+.gauge-sign.left { left: 0; }
+.gauge-sign.right { right: 0; }
+.gauge-halo { position: absolute; left: calc(50% - 90px); top: 6px; width: 180px; height: 100px; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,190,110,.45), rgba(255,190,110,0) 70%); }
+.gauge-centre { position: absolute; left: calc(50% - 1px); top: 28px; width: 2px; height: 56px; background: var(--ember-300); }
+.gauge-centre.intune { background: var(--ember-200); }
+.gauge-centre.nosig { opacity: .4; }
+.gauge-band { position: absolute; top: 54px; height: 4px; border-radius: 2px; background: rgba(232,130,58,.4); transition: left .2s ease-out, width .2s ease-out; }
+.gauge-glow { position: absolute; border-radius: 50%; transition: all .2s ease-out; }
+.gauge-needle { position: absolute; top: 20px; width: 8px; height: 72px; border-radius: 4px; background: var(--ember-500); transition: left .2s ease-out, box-shadow .2s; }
+.gauge-needle.intune { background: var(--ember-200); }
+
+.strings { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-3); }
+.string { position: relative; height: var(--target-string); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: var(--radius-group); border: 1.5px solid var(--line-control); background: transparent; color: var(--cream-100); cursor: pointer; transition: border-color .3s, box-shadow .3s, background .3s; }
+.string:hover { background: var(--cream-tint-hover); }
+.string:active { background: var(--ember-tint-switch); }
+.string:focus-visible { outline: 2px solid var(--ember-500); outline-offset: 2px; }
+.string.done { border-color: rgba(232,130,58,.32); }
+.string.active { border-color: var(--ember-500); background: var(--ember-tint-now); box-shadow: 0 0 18px rgba(232,130,58,.25); }
+.string.active.intune { box-shadow: 0 0 30px rgba(232,130,58,.45); }
+.string-log { position: absolute; top: 12px; left: 50%; margin-left: -18px; width: 36px; height: 10px; border-radius: 5px; border: 1px solid rgba(244,233,216,.22); transition: all .4s; }
+.string-log.lit { border-color: var(--ember-500); }
+.string-log.burning { border-color: transparent; background: linear-gradient(180deg, var(--ember-300), var(--ember-500) 50%, var(--ember-600)); box-shadow: 0 0 10px rgba(232,130,58,.6); }
+.string-note { margin-top: 10px; font: 600 44px/1 var(--font-display); color: var(--cream-300); }
+.string.active .string-note, .string.done .string-note { color: var(--cream-100); }
+.string-sub { display: flex; align-items: center; gap: 6px; font-size: var(--fs-kicker); color: var(--cream-500); }
+
+/* Step complete */
+.stage-done { gap: 10px; }
+.fire-slot { width: 480px; max-width: 100%; }
+.title-done { font: 400 56px/1.05 var(--font-display); }
+.perm-ring { width: 460px; height: 460px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid rgba(244,233,216,.08); }
+.perm-error { font-size: var(--fs-label); line-height: 1.5; color: var(--ember-300); }
+.dialog-narrow { width: 520px; gap: 14px; }
+.dialog-actions-gap { margin-top: var(--space-3); }
+.debug-error { font-size: var(--fs-small); color: var(--ember-300); }
+
+@media (orientation: portrait) {
+  .gauge { width: min(640px, 100%); }
+  .perm-ring { width: 300px; height: 300px; }
+}
+
+@keyframes cf-flicker { 0%,100% { transform: scaleY(1) scaleX(1); } 25% { transform: scaleY(1.06) scaleX(.96); } 50% { transform: scaleY(.95) scaleX(1.03); } 75% { transform: scaleY(1.04) scaleX(.98); } }
+@keyframes cf-sway { 0%,100% { transform: skewX(0deg); } 33% { transform: skewX(3deg); } 66% { transform: skewX(-3deg); } }
+@keyframes cf-breathe { 0%,100% { opacity: .8; transform: translateX(-50%) scale(1); } 50% { opacity: 1; transform: translateX(-50%) scale(1.05); } }
+@keyframes cf-rise { 0% { transform: translate(0,0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(14px,-170px); opacity: 0; } }
+@keyframes cf-drop { 0% { transform: translateY(-260px) rotate(-34deg); opacity: 0; } 12% { opacity: 1; } 42% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-12px) rotate(-6deg); } 58%,100% { transform: translateY(0) rotate(-6deg); opacity: 1; } }
+@keyframes cf-flare { 0%,40% { opacity: 0; } 55% { opacity: 1; } 100% { opacity: 0; } }
+
 /* After every font shorthand above, which would otherwise reset it. */
 .tnum { font-feature-settings: "tnum"; }

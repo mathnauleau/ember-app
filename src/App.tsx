@@ -4,6 +4,7 @@ import { Debug } from './screens/Debug'
 import { Home } from './screens/Home'
 import { Settings } from './screens/Settings'
 import { SessionPreview } from './screens/session/SessionPreview'
+import { TuneStep } from './screens/session/TuneStep'
 
 function subscribe(listener: () => void) {
   window.addEventListener('hashchange', listener)
@@ -25,6 +26,8 @@ export function App() {
       return <Calibration go={go} />
     case '/debug':
       return <Debug go={go} />
+    case '/session/tune':
+      return <TuneStep go={go} />
     case '/session/time-up':
       return <SessionPreview key={route} start="time-up" go={go} />
     case '/session/no-mic':

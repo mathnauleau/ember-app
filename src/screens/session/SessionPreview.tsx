@@ -42,7 +42,7 @@ export function SessionPreview({ start, go }: { start: 'time-up' | 'no-mic'; go:
       logsDone={timeUp ? 3 : 2}
       logsLit={timeUp ? 0 : 1}
       nextLabel={timeUp ? 'Strum pattern' : 'Next'}
-      onPause={pause}
+      onLeave={pause}
       onSkip={finish}
       onNext={finish}
     >

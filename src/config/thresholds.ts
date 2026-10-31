@@ -1,4 +1,4 @@
-// Every tunable threshold lives here. Debug overrides are persisted in the store.
+// Every tunable threshold lives here. The Debug sliders persist overrides of these five.
 export type Thresholds = {
   floor: number // dB, silent below
   noisy: number // dB, noisy floor above
@@ -13,4 +13,14 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
   close: 0.78,
   margin: 0.08,
   onTime: 70,
+}
+
+export const PITCH = {
+  fftSize: 4096,
+  readingMs: 33, // about 30 readings/s
+  minClarity: 0.9,
+  smoothing: 5, // readings in the median
+  lowClarityReadings: 15, // about 0.5 s of sound with no clear pitch means noisy
+  floorMeasureMs: 1000,
+  silentRatio: 2, // silent = RMS under twice the measured floor
 }
