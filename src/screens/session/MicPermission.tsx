@@ -1,7 +1,8 @@
 import { Mic } from '../../components/icons'
 
 // The design's inline permission layout (Session 1b), shown on the first mic step of a session.
-export function MicPermission({ error, starting, onAllow, onWithout }: {
+export function MicPermission({ kicker = 'Before we tune', error, starting, onAllow, onWithout }: {
+  kicker?: string
   error: string | null
   starting: boolean
   onAllow: () => void
@@ -15,7 +16,7 @@ export function MicPermission({ error, starting, onAllow, onWithout }: {
         </div>
       </div>
       <div className="nomic-panel">
-        <span className="kicker">Before we tune</span>
+        <span className="kicker">{kicker}</span>
         <h2 className="title-state">Can the fire listen?</h2>
         <p className="dialog-body">Ember uses the mic to hear your guitar, right here on the iPad. Nothing is recorded or saved.</p>
         {error && <p className="perm-error" role="alert">{error}</p>}

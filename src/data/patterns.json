@@ -1,0 +1,3 @@
+[
+  { "id": "folk", "name": "Folk strum", "level": 2, "bpm": 72, "slots": ["D", "_", "D", "U", "_", "U", "D", "U"] }
+]

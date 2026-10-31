@@ -12,6 +12,7 @@ export type Settings = {
   clickVolume: number
   latencyOffsetMs: number | null
   latencyOffsetSetOn: string | null
+  bpmByPattern: Record<string, number>
 }
 
 export type SavedSession = {
@@ -37,6 +38,7 @@ export const DEFAULT_PROGRESS: Progress = {
     clickVolume: 30,
     latencyOffsetMs: null,
     latencyOffsetSetOn: null,
+    bpmByPattern: {},
   },
   thresholds: DEFAULT_THRESHOLDS,
   thresholdsRev: THRESHOLDS_REV,
@@ -61,6 +63,11 @@ function readSession(v: unknown): SavedSession | null {
   }
 }
 
+function readBpms(v: unknown) {
+  const entries = isRecord(v) ? Object.entries(v) : []
+  return Object.fromEntries(entries.filter((e): e is [string, number] => typeof e[1] === 'number' && e[1] >= 40 && e[1] <= 160))
+}
+
 // Field by field, so stored or imported data can never put a bad value in the store.
 export function sanitize(raw: unknown): Progress {
   const d = DEFAULT_PROGRESS
@@ -75,6 +82,7 @@ export function sanitize(raw: unknown): Progress {
       clickVolume: Math.min(100, Math.max(0, num(s.clickVolume, d.settings.clickVolume))),
       latencyOffsetMs: numOrNull(s.latencyOffsetMs),
       latencyOffsetSetOn: strOrNull(s.latencyOffsetSetOn),
+      bpmByPattern: readBpms(s.bpmByPattern),
     },
     thresholds: {
       floor: num(t.floor, d.thresholds.floor),
@@ -134,6 +142,10 @@ export function replaceProgress(next: Progress) {
 
 export function updateSettings(patch: Partial<Settings>) {
   commit({ ...state, settings: { ...state.settings, ...patch } })
+}
+
+export function updateBpm(patternId: string, bpm: number) {
+  updateSettings({ bpmByPattern: { ...state.settings.bpmByPattern, [patternId]: bpm } })
 }
 
 export function updateThresholds(patch: Partial<Thresholds>) {

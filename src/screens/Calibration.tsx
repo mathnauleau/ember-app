@@ -1,4 +1,4 @@
-import { CALIBRATION_BEATS, useCalibration, type Calibration as State } from '../audio/calibration'
+import { CALIBRATION_BEATS, useCalibration, type Calibration as State } from '../audio/useCalibration'
 import { BackBar } from '../components/ui'
 import { today } from '../lib/dates'
 import { updateSettings } from '../store/progress'
@@ -16,6 +16,12 @@ function copy(state: State) {
         kicker: `Beat ${state.beat + 1} of ${CALIBRATION_BEATS}`,
         title: 'Strum on every click.',
         body: 'Any chord, or muted strings. Just keep with the beat.',
+      }
+    case 'failed':
+      return {
+        kicker: 'Nearly',
+        title: "The fire didn't catch enough strums.",
+        body: 'Move closer to the iPad and strum firmly on each click.',
       }
     case 'done':
       return {
@@ -35,7 +41,7 @@ function beatClass(state: State, i: number) {
 }
 
 export function Calibration({ go }: { go: (route: string) => void }) {
-  const { state, start } = useCalibration()
+  const { state, start, reset, error, waiting } = useCalibration()
   const { kicker, title, body } = copy(state)
 
   const save = () => {
@@ -51,13 +57,17 @@ export function Calibration({ go }: { go: (route: string) => void }) {
         <span className="kicker">{kicker}</span>
         <h1 className="title-display">{title}</h1>
         <p className="lede">{body}</p>
+        {error && <p className="perm-error" role="alert">{error}</p>}
         <div className="beats" aria-hidden="true">
           {Array.from({ length: CALIBRATION_BEATS }, (_, i) => (
             <span key={i} className={`${beatClass(state, i)} tnum`}>{i + 1}</span>
           ))}
         </div>
         {state.phase === 'idle' && (
-          <button className="btn btn-primary cal-start" onClick={start}>Start the click</button>
+          <button className="btn btn-primary cal-start" disabled={waiting} onClick={start}>Start the click</button>
+        )}
+        {state.phase === 'failed' && (
+          <button className="btn btn-primary cal-start" onClick={reset}>Try again</button>
         )}
         {state.phase === 'done' && (
           <div className="cal-actions">

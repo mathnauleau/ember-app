@@ -1,16 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getProgress } from '../store/progress'
 import { audioUnlocked, IDLE_READING, micErrorMessage, startMic, unlockAudio, type MicReading } from './mic'
+import type { Onset } from './strumTiming'
 import { FULL_RANGE } from './tuner'
 
 // Releases the mic whenever `active` goes false or the screen unmounts.
-export function useMic({ active = true, range = FULL_RANGE } = {}) {
+export function useMic({ active = true, range = FULL_RANGE, onOnset }: {
+  active?: boolean
+  range?: { minHz: number; maxHz: number }
+  onOnset?: (onset: Onset) => void
+} = {}) {
   const [reading, setReading] = useState<MicReading>(IDLE_READING)
   const [error, setError] = useState<string | null>(null)
   const stopMic = useRef<(() => void) | null>(null)
   const session = useRef(0)
   const rangeRef = useRef(range)
   rangeRef.current = range
+  const onOnsetRef = useRef(onOnset)
+  onOnsetRef.current = onOnset
+  const wantsOnsets = onOnset !== undefined
 
   const stop = useCallback(() => {
     session.current += 1
@@ -31,6 +39,7 @@ export function useMic({ active = true, range = FULL_RANGE } = {}) {
           const { floor, noisy } = getProgress().thresholds
           return { silentDb: floor, noisyDb: noisy, ...rangeRef.current }
         },
+        onOnset: wantsOnsets ? (onset) => onOnsetRef.current?.(onset) : undefined,
         onReading: (next) => {
           if (id === session.current) setReading(next)
         },
@@ -47,7 +56,7 @@ export function useMic({ active = true, range = FULL_RANGE } = {}) {
       setReading(IDLE_READING)
       setError(micErrorMessage(e))
     }
-  }, [stop])
+  }, [stop, wantsOnsets])
 
   // Call from a tap: iOS only unlocks audio inside a user gesture.
   const start = useCallback(() => {
@@ -68,5 +77,5 @@ export function useMic({ active = true, range = FULL_RANGE } = {}) {
     return () => window.removeEventListener('pointerdown', start)
   }, [stalled, start])
 
-  return { reading, error, start }
+  return { reading, error, start, stop }
 }

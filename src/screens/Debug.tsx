@@ -1,5 +1,8 @@
-import { GRID_SLOTS, NOTES, TARGET_NAME, TARGET_PITCH_CLASSES, useDebugSignal } from '../audio/debugSignal'
-import { centsBetween, nearestStringIndex, rmsToDb, STRINGS } from '../audio/pitch'
+import { useRef } from 'react'
+import { NOTES, TARGET_NAME, TARGET_PITCH_CLASSES, useDebugSignal } from '../audio/debugSignal'
+import { centsBetween, median, nearestStringIndex, rmsToDb, STRINGS } from '../audio/pitch'
+import type { Onset } from '../audio/strumTiming'
+import { useMetronome } from '../audio/useMetronome'
 import { useMic } from '../audio/useMic'
 import { BackBar } from '../components/ui'
 import type { Thresholds } from '../config/thresholds'
@@ -30,14 +33,33 @@ const STATE_LABEL = {
   stalled: 'No sound, tap to retry',
 }
 
+const GRID_SLOTS = 16
+const DEBUG_BPM = 72
+
 const dbToX = (db: number) => `${Math.max(0, Math.min(100, ((db + 80) / 80) * 100))}%`
 const signed = (v: number, digits = 0) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(digits)}`
 const dbLabel = (rms: number) => (rms > 0 ? `${signed(rmsToDb(rms))} dB` : '— dB')
 
 export function Debug({ go }: { go: (route: string) => void }) {
   const { settings, thresholds: th } = useProgress()
-  const { reading: mic, error, start } = useMic()
+  const onsets = useRef<Onset[]>([])
+  const { reading: mic, error, start } = useMic({ onOnset: (onset) => onsets.current.push(onset) })
+  const click = useMetronome({ bpm: DEBUG_BPM })
   const sig = useDebugSignal()
+
+  // Last two bars of the click, with each onset placed against its nearest slot.
+  const grid = click.slots.current.slice(-GRID_SLOTS)
+  const eighthS = 30 / DEBUG_BPM
+  const compensationS = mic.latencyMs / 1000 + (settings.latencyOffsetMs ?? 0) / 1000
+  const shown = !grid.length
+    ? []
+    : onsets.current
+        .map((o) => {
+          const time = o.time - compensationS
+          const nearest = grid.reduce((a, b) => (Math.abs(b.time - time) < Math.abs(a.time - time) ? b : a))
+          return { time, offsetMs: (time - nearest.time) * 1000, x: ((time - grid[0].time + eighthS / 2) / (GRID_SLOTS * eighthS)) * 100 }
+        })
+        .filter((o) => o.x >= 0 && o.x <= 100)
 
   const micOff = mic.status === 'idle'
   const string = mic.hz === null ? null : STRINGS[nearestStringIndex(mic.hz)]
@@ -50,6 +72,11 @@ export function Debug({ go }: { go: (route: string) => void }) {
       <BackBar label="Back" title="Debug" onBack={() => go('/settings')}>
         <span className="chip chip-ember">{STATE_LABEL[mic.status]}</span>
         {micOff && <button className="btn btn-pill" onClick={start}>Start mic</button>}
+        {!micOff && (
+          <button className="btn btn-pill" onClick={click.running ? click.stop : click.start}>
+            {click.running ? 'Stop click' : 'Start click'}
+          </button>
+        )}
         <span className="spacer" />
         <span className="muted tnum">
           {mic.sampleRate ? `${mic.contextState} · ${mic.trackState} · ${mic.sampleRate / 1000} kHz · ${mic.latencyMs.toFixed(0)} ms · ` : ''}
@@ -109,8 +136,8 @@ export function Debug({ go }: { go: (route: string) => void }) {
 
           <section className="debug-block ruled">
             <div className="debug-head">
-              <span className="debug-label">Onsets vs click · simulated</span>
-              <span className="tnum">median {signed(sig.medianOffsetMs)} ms</span>
+              <span className="debug-label">Onsets vs click · last 2 bars</span>
+              <span className="tnum">{shown.length ? `median ${signed(median(shown.map((o) => o.offsetMs)))} ms` : 'no onsets yet'}</span>
             </div>
             <div className="onsets">
               {Array.from({ length: GRID_SLOTS }, (_, i) => (
@@ -120,11 +147,11 @@ export function Debug({ go }: { go: (route: string) => void }) {
                   style={{ left: `${((i + 0.5) / GRID_SLOTS) * 100}%` }}
                 />
               ))}
-              {sig.onsets.map((o) => (
+              {shown.map((o) => (
                 <span
-                  key={o.slot}
-                  className={`onset ${!o.heard ? 'pending' : Math.abs(o.offsetMs) <= th.onTime ? 'on-time' : 'off-time'}`}
-                  style={{ left: `calc(${((o.slot + 0.5) / GRID_SLOTS) * 100}% + ${o.offsetMs / 10}px)` }}
+                  key={o.time}
+                  className={`onset ${Math.abs(o.offsetMs) <= th.onTime ? 'on-time' : 'off-time'}`}
+                  style={{ left: `${o.x}%` }}
                 />
               ))}
             </div>

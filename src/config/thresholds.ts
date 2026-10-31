@@ -26,3 +26,20 @@ export const PITCH = {
   floorAdapt: 0.1, // how fast the floor drops when the room is quieter than first measured
   stalledMs: 3000, // this long without audio counts as a stalled mic
 }
+
+export const ONSET = {
+  hopSize: 128, // samples per energy frame, about 2.7 ms at 48 kHz
+  riseRatio: 4, // energy must jump this far above the recent average
+  minEnergy: 1e-7, // ignores tiny rises in a silent room
+  refractoryMs: 50, // one strum, one onset
+  baselineMs: 150, // how long the recent average remembers
+}
+
+export const TIMING = {
+  minMatched: 4, // fewer matched strums in a bar means no feedback
+  clickLeakMs: 20, // window around a click's arrival where an onset may be the click itself
+  clickLeakRatio: 0.5, // inside it, an onset must be this loud relative to off-click strums
+  clickHz: 1000,
+  accentHz: 1500,
+  clickSeconds: 0.03,
+}

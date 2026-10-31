@@ -254,5 +254,51 @@ input[type=range] { accent-color: var(--ember-500); }
 @keyframes cf-drop { 0% { transform: translateY(-260px) rotate(-34deg); opacity: 0; } 12% { opacity: 1; } 42% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-12px) rotate(-6deg); } 58%,100% { transform: translateY(0) rotate(-6deg); opacity: 1; } }
 @keyframes cf-flare { 0%,40% { opacity: 0; } 55% { opacity: 1; } 100% { opacity: 0; } }
 
+/* Strum */
+.strum { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: var(--space-5); padding: 12px var(--screen-pad-x) 24px; }
+.strum-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.strum-title { display: flex; flex-direction: column; gap: 6px; }
+.strum-name { font: 400 44px/1 var(--font-display); }
+.strum-level { display: flex; align-items: center; gap: 10px; }
+.strum-dots { display: flex; gap: 6px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--line-strong); }
+.dot.on { border: 0; background: var(--ember-500); }
+.strum-level-label { font-size: var(--fs-small); color: var(--cream-500); }
+.seg-opt.seg-icon { display: flex; align-items: center; gap: 10px; }
+.strum-grid-wrap { display: flex; flex-direction: column; gap: 10px; }
+.strum-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: var(--space-3); }
+.strum-slot-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.strum-slot { width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-group); border: 1.5px solid rgba(244,233,216,.14); transition: all .12s; }
+.strum-slot.now { border-color: var(--ember-500); background: var(--ember-tint-selected); box-shadow: var(--glow-active); }
+.strum-slot.now.rest { box-shadow: 0 0 16px rgba(232,130,58,.18); }
+.strum-slot.resting { border-color: rgba(232,130,58,.5); }
+.strum-rest { width: 12px; height: 12px; border-radius: 50%; background: rgba(244,233,216,.28); }
+.strum-count { font: 600 30px/1 var(--font-display); color: var(--cream-300); }
+.strum-count.off { color: var(--cream-500); }
+.strum-count.now { color: var(--ember-500); }
+.strum-rail { position: relative; height: 16px; margin: 0 2px; }
+.strum-rail-line { position: absolute; left: 0; right: 0; top: 7px; height: 1px; background: rgba(244,233,216,.14); }
+.strum-ember { position: absolute; top: 0; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: radial-gradient(circle, var(--ember-200) 0%, var(--ember-500) 55%, var(--ember-600) 100%); box-shadow: 0 0 16px 4px rgba(232,130,58,.6); transition: left .1s linear; }
+.strum-ember.resting { box-shadow: 0 0 16px 4px rgba(232,130,58,.2); }
+.strum-foot { display: flex; align-items: stretch; gap: 20px; flex-wrap: wrap; }
+.strum-controls { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2); border: 1px solid rgba(244,233,216,.14); border-radius: var(--radius-group); }
+.strum-bpm { display: flex; flex-direction: column; align-items: center; min-width: 72px; }
+.strum-bpm-value { font: 400 44px/1 var(--font-display); }
+.strum-bpm-label { font-size: var(--fs-kicker); color: var(--cream-500); }
+.strum-rule { width: 1px; align-self: stretch; margin: 6px var(--space-1); background: rgba(244,233,216,.14); }
+.btn-pill.strum-tap { border-color: rgba(244,233,216,.22); }
+.strum-feedback { flex: 1; min-width: 300px; display: flex; align-items: center; gap: 22px; padding: 14px var(--space-5); border: 1px solid rgba(244,233,216,.18); border-radius: var(--radius-group); transition: border-color .4s; }
+.strum-feedback.idle { border-color: rgba(244,233,216,.14); }
+.strum-feedback.on { border-color: var(--ember-line-soft); }
+.strum-meter { position: relative; width: 64px; height: 40px; flex: none; }
+.strum-meter-line { position: absolute; left: 31px; top: 0; width: 2px; height: 40px; background: var(--line-strong); }
+.strum-meter-dot { position: absolute; top: 14px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--ember-500); box-shadow: 0 0 12px rgba(232,130,58,.5); transition: left .4s; }
+.strum-meter-dot.idle { background: var(--line-strong); }
+.strum-feedback-text { display: flex; flex-direction: column; gap: 2px; }
+.strum-feedback-title { font: 400 32px/1.1 var(--font-display); color: var(--cream-100); }
+.strum-feedback.on .strum-feedback-title { color: var(--ember-300); }
+.strum-feedback.resting .strum-feedback-title { color: var(--cream-300); }
+.strum-feedback-sub { font-size: var(--fs-label); color: var(--cream-300); }
+
 /* After every font shorthand above, which would otherwise reset it. */
 .tnum { font-feature-settings: "tnum"; }

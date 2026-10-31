@@ -1,6 +1,8 @@
 import { PitchDetector } from 'pitchy'
 import { PITCH } from '../config/thresholds'
+import workletUrl from './onset.worklet.ts?worker&url'
 import { dbToRms, isOctaveJump, median, rmsOf } from './pitch'
+import type { Onset } from './strumTiming'
 
 const { minClarity, smoothing, lowClarityReadings, floorMeasureMs, silentRatio, floorAdapt, stalledMs, readingMs, fftSize } = PITCH
 
@@ -37,6 +39,7 @@ export const IDLE_READING: MicReading = {
 }
 
 let sharedContext: AudioContext | null = null
+let workletLoaded: Promise<void> | null = null
 
 // One context for mic, metronome and synth, first created inside a tap (iOS requires it).
 export function unlockAudio() {
@@ -68,6 +71,7 @@ export function micErrorMessage(error: unknown) {
 export async function startMic(options: {
   getConfig: () => MicConfig
   onReading: (reading: MicReading) => void
+  onOnset?: (onset: Onset) => void
   onStopped: () => void
 }) {
   if (!navigator.mediaDevices?.getUserMedia) {
@@ -89,6 +93,21 @@ export async function startMic(options: {
   source.connect(analyser)
   analyser.connect(mute)
   mute.connect(context.destination)
+
+  // Tuning doesn't depend on onsets, so a failed worklet must not stop the mic.
+  let onsetNode: AudioWorkletNode | null = null
+  if (options.onOnset) {
+    try {
+      workletLoaded ??= context.audioWorklet.addModule(workletUrl)
+      await workletLoaded
+      onsetNode = new AudioWorkletNode(context, 'onset')
+      onsetNode.port.onmessage = (event: MessageEvent<Onset>) => options.onOnset?.(event.data)
+      source.connect(onsetNode)
+      onsetNode.connect(mute)
+    } catch (error) {
+      console.error('Onset detection could not start', error)
+    }
+  }
 
   const track = stream.getAudioTracks()[0]
   track?.addEventListener('ended', options.onStopped)
@@ -203,6 +222,7 @@ export async function startMic(options: {
     stream.getTracks().forEach((track) => track.stop())
     source.disconnect()
     analyser.disconnect()
+    onsetNode?.disconnect()
     mute.disconnect()
   }
 }
