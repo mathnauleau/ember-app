@@ -43,3 +43,18 @@ export const TIMING = {
   accentHz: 1500,
   clickSeconds: 0.03,
 }
+
+export const CHORD = {
+  fftSize: 16384,
+  everyReadings: 3, // about 10 chroma frames/s
+  minHz: 80,
+  maxHz: 2000,
+  rangeDb: 45, // spectral peaks this far below the loudest still count
+  bassWeight: 2,
+  holdSeconds: 2,
+  holdDecayPerSecond: 0.25, // fraction of the hold lost each second away from the chord
+  retryAfterMs: 500, // sounding this long without matching means try again
+  retryLingerMs: 2500, // the prompt stays this long after the sound stops
+  idleAfterMs: 8000, // no sound for this long is the quiet "take your time" state
+  stableChangeMs: 300, // a change counts once the new chord holds this long
+}

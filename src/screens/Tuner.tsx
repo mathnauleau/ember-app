@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
 import type { MicStatus } from '../audio/mic'
 import { STRINGS } from '../audio/pitch'
-import { Fire } from '../components/Fire'
 import { Gauge } from '../components/Gauge'
 import { Lock, Mic } from '../components/icons'
 
@@ -92,35 +90,6 @@ export function Tuner(props: TunerProps) {
             </button>
           )
         })}
-      </div>
-    </div>
-  )
-}
-
-export function TunerDone({ onAdvance }: { onAdvance: () => void }) {
-  const [left, setLeft] = useState(3)
-  const [staying, setStaying] = useState(false)
-
-  useEffect(() => {
-    if (staying) return
-    if (left === 0) {
-      onAdvance()
-      return
-    }
-    const id = setTimeout(() => setLeft(left - 1), 1000)
-    return () => clearTimeout(id)
-  }, [left, staying, onAdvance])
-
-  return (
-    <div className="stage stage-done">
-      <div className="fire-slot">
-        <Fire />
-      </div>
-      <h2 className="title-done">All six strings in tune.</h2>
-      <p className="lede lede-lg">The first log is on the fire.</p>
-      <div className="timeup-next">
-        {!staying && <span className="timeup-count tnum">Warm-up starts in {left}</span>}
-        {!staying && <button className="btn btn-pill" onClick={() => setStaying(true)}>Stay a moment</button>}
       </div>
     </div>
   )

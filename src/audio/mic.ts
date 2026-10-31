@@ -1,5 +1,6 @@
 import { PitchDetector } from 'pitchy'
-import { PITCH } from '../config/thresholds'
+import { CHORD, PITCH } from '../config/thresholds'
+import { chromaFromSpectrum, type Chroma } from './chord'
 import workletUrl from './onset.worklet.ts?worker&url'
 import { dbToRms, isOctaveJump, median, rmsOf } from './pitch'
 import type { Onset } from './strumTiming'
@@ -14,6 +15,7 @@ export type MicReading = {
   rawHz: number
   clarity: number
   rms: number
+  chroma: Chroma | null
   floorRms: number | null
   octaveJumps: number
   sampleRate: number
@@ -30,6 +32,7 @@ export const IDLE_READING: MicReading = {
   rawHz: 0,
   clarity: 0,
   rms: 0,
+  chroma: null,
   floorRms: null,
   octaveJumps: 0,
   sampleRate: 0,
@@ -72,6 +75,7 @@ export async function startMic(options: {
   getConfig: () => MicConfig
   onReading: (reading: MicReading) => void
   onOnset?: (onset: Onset) => void
+  chroma?: boolean // chord work: a strum has no single pitch, so low clarity isn't noise
   onStopped: () => void
 }) {
   if (!navigator.mediaDevices?.getUserMedia) {
@@ -93,6 +97,18 @@ export async function startMic(options: {
   source.connect(analyser)
   analyser.connect(mute)
   mute.connect(context.destination)
+
+  let spectrumNode: AnalyserNode | null = null
+  if (options.chroma) {
+    spectrumNode = context.createAnalyser()
+    spectrumNode.fftSize = CHORD.fftSize
+    spectrumNode.smoothingTimeConstant = 0
+    source.connect(spectrumNode)
+    spectrumNode.connect(mute)
+  }
+  const spectrum = new Float32Array(spectrumNode?.frequencyBinCount ?? 0)
+  let chroma: Chroma | null = null
+  let readings = 0
 
   // Tuning doesn't depend on onsets, so a failed worklet must not stop the mic.
   let onsetNode: AudioWorkletNode | null = null
@@ -146,6 +162,10 @@ export async function startMic(options: {
     analyser.getFloatTimeDomainData(buffer)
     const rms = rmsOf(buffer)
     const [rawHz, clarity] = detector.findPitch(buffer, context.sampleRate)
+    if (spectrumNode && ++readings % CHORD.everyReadings === 0) {
+      spectrumNode.getFloatFrequencyData(spectrum)
+      chroma = chromaFromSpectrum(spectrum, context.sampleRate, CHORD.fftSize)
+    }
 
     if (floorRms === null) {
       floorStartedAt ??= now
@@ -191,7 +211,9 @@ export async function startMic(options: {
       status = 'listening'
     } else {
       unclear += 1
-      if (noisyRoom || unclear >= lowClarityReadings) status = 'noisy'
+      if (noisyRoom) status = 'noisy'
+      else if (options.chroma) status = 'listening'
+      else if (unclear >= lowClarityReadings) status = 'noisy'
     }
     return { rawHz, clarity, rms }
   }
@@ -199,6 +221,7 @@ export async function startMic(options: {
   const timer = setInterval(() => {
     options.onReading({
       ...read(),
+      chroma,
       status,
       hz: smoothed,
       floorRms,
@@ -217,6 +240,7 @@ export async function startMic(options: {
     source.disconnect()
     analyser.disconnect()
     onsetNode?.disconnect()
+    spectrumNode?.disconnect()
     mute.disconnect()
   }
 }

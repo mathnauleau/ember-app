@@ -4,6 +4,7 @@ import { Debug } from './screens/Debug'
 import { Home } from './screens/Home'
 import { Settings } from './screens/Settings'
 import { SessionPreview } from './screens/session/SessionPreview'
+import { ChordStep } from './screens/session/ChordStep'
 import { StrumStep } from './screens/session/StrumStep'
 import { TuneStep } from './screens/session/TuneStep'
 
@@ -18,7 +19,7 @@ const go = (route: string) => {
 }
 
 export function App() {
-  const route = useSyncExternalStore(subscribe, readRoute)
+  const [route, chords] = useSyncExternalStore(subscribe, readRoute).split('?')
 
   switch (route) {
     case '/settings':
@@ -29,6 +30,8 @@ export function App() {
       return <Debug go={go} />
     case '/session/tune':
       return <TuneStep go={go} />
+    case '/session/chords':
+      return <ChordStep go={go} pair={chords?.split(',')} />
     case '/session/strum':
       return <StrumStep go={go} />
     case '/session/time-up':

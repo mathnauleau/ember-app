@@ -14,7 +14,7 @@ export function SessionShell(props: {
   logsLit: number
   skipLabel?: string
   nextLabel: string
-  centered?: boolean
+  background?: 'centered' | 'drill'
   onPauseChange?: (paused: boolean) => void
   onLeave: () => void
   onSkip: () => void
@@ -30,7 +30,7 @@ export function SessionShell(props: {
   }
 
   return (
-    <main className={props.centered ? 'screen screen-centered' : 'screen'}>
+    <main className={props.background ? `screen screen-${props.background}` : 'screen'}>
       <header className="topbar">
         <button className="btn btn-icon" aria-label="Pause session" onClick={() => pause(true)}>
           <Close />

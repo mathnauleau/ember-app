@@ -5,10 +5,11 @@ import type { Onset } from './strumTiming'
 import { FULL_RANGE } from './tuner'
 
 // Releases the mic whenever `active` goes false or the screen unmounts.
-export function useMic({ active = true, range = FULL_RANGE, onOnset }: {
+export function useMic({ active = true, range = FULL_RANGE, onOnset, chroma = false }: {
   active?: boolean
   range?: { minHz: number; maxHz: number }
   onOnset?: (onset: Onset) => void
+  chroma?: boolean
 } = {}) {
   const [reading, setReading] = useState<MicReading>(IDLE_READING)
   const [error, setError] = useState<string | null>(null)
@@ -39,6 +40,7 @@ export function useMic({ active = true, range = FULL_RANGE, onOnset }: {
           const { floor, noisy } = getProgress().thresholds
           return { silentDb: floor, noisyDb: noisy, ...rangeRef.current }
         },
+        chroma,
         onOnset: wantsOnsets ? (onset) => onOnsetRef.current?.(onset) : undefined,
         onReading: (next) => {
           if (id === session.current) setReading(next)
@@ -56,7 +58,7 @@ export function useMic({ active = true, range = FULL_RANGE, onOnset }: {
       setReading(IDLE_READING)
       setError(micErrorMessage(e))
     }
-  }, [stop, wantsOnsets])
+  }, [stop, wantsOnsets, chroma])
 
   // Call from a tap: iOS only unlocks audio inside a user gesture.
   const start = useCallback(() => {

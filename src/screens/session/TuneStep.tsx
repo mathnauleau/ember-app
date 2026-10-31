@@ -3,8 +3,9 @@ import { useStepTimer } from '../../audio/useStepTimer'
 import { useTuner } from '../../audio/useTuner'
 import { STRINGS } from '../../audio/pitch'
 import { SessionShell } from '../SessionShell'
-import { Tuner, TunerDone } from '../Tuner'
+import { Tuner } from '../Tuner'
 import { MicPermission } from './MicPermission'
+import { StepDone } from './StepDone'
 import { TimeUp } from './TimeUp'
 
 const STEP_SECONDS = 60
@@ -43,14 +44,14 @@ export function TuneStep({ go }: { go: (route: string) => void }) {
       logsLit={ended ? 0 : 1}
       skipLabel="Skip tuning"
       nextLabel={ended ? NEXT_STEP : 'Next'}
-      centered
+      background="centered"
       onPauseChange={setPaused}
       onLeave={leave}
       onSkip={leave}
       onNext={leave}
     >
       {allDone ? (
-        <TunerDone onAdvance={leave} />
+        <StepDone title="All six strings in tune." summary="The first log is on the fire." nextStep={NEXT_STEP} onAdvance={leave} />
       ) : timedOut ? (
         <TimeUp
           title="That's tuning for tonight."

@@ -1,10 +1,12 @@
-import { useRef } from 'react'
-import { NOTES, TARGET_NAME, TARGET_PITCH_CLASSES, useDebugSignal } from '../audio/debugSignal'
+import { useRef, useState } from 'react'
+import { chordPitchClasses, NOTES } from '../audio/chord'
 import { centsBetween, median, nearestStringIndex, rmsToDb, STRINGS } from '../audio/pitch'
 import type { Onset } from '../audio/strumTiming'
+import { useChordCheck } from '../audio/useChordCheck'
 import { useMetronome } from '../audio/useMetronome'
 import { useMic } from '../audio/useMic'
 import { BackBar } from '../components/ui'
+import chords from '../data/chords.json'
 import type { Thresholds } from '../config/thresholds'
 import { updateThresholds, useProgress } from '../store/progress'
 
@@ -33,6 +35,7 @@ const STATE_LABEL = {
   stalled: 'No sound, tap to retry',
 }
 
+const SCORED = Object.fromEntries((['Em', 'Am', 'G', 'C'] as const).map((n) => [n, chords[n]]))
 const GRID_SLOTS = 16
 const DEBUG_BPM = 72
 
@@ -43,9 +46,12 @@ const dbLabel = (rms: number) => (rms > 0 ? `${signed(rmsToDb(rms))} dB` : '— 
 export function Debug({ go }: { go: (route: string) => void }) {
   const { settings, thresholds: th } = useProgress()
   const onsets = useRef<Onset[]>([])
-  const { reading: mic, error, start } = useMic({ onOnset: (onset) => onsets.current.push(onset) })
+  const { reading: mic, error, start } = useMic({ chroma: true, onOnset: (onset) => onsets.current.push(onset) })
   const click = useMetronome({ bpm: DEBUG_BPM })
-  const sig = useDebugSignal()
+  const [target, setTarget] = useState('Em')
+  const check = useChordCheck(mic, { target, chords: SCORED })
+  const targetNotes = chordPitchClasses(SCORED[target].frets)
+  const chroma = mic.chroma ?? new Array<number>(12).fill(0)
 
   // Last two bars of the click, with each onset placed against its nearest slot.
   const grid = click.slots.current.slice(-GRID_SLOTS)
@@ -63,9 +69,6 @@ export function Debug({ go }: { go: (route: string) => void }) {
 
   const micOff = mic.status === 'idle'
   const string = mic.hz === null ? null : STRINGS[nearestStringIndex(mic.hz)]
-  const [best, ...rest] = sig.scores.map((s) => s.value)
-  const margin = best - Math.max(...rest)
-  const holding = best >= th.close && margin >= th.margin
 
   return (
     <main className="screen screen-flat">
@@ -117,19 +120,15 @@ export function Debug({ go }: { go: (route: string) => void }) {
           {error && <p className="debug-error" role="alert">{error}</p>}
 
           <section className="debug-block ruled">
-            <span className="debug-label">Chroma · target {TARGET_NAME} · simulated</span>
+            <span className="debug-label">Chroma · target {target}</span>
             <div className="chroma">
-              {sig.chroma.map((v, i) => (
-                <div
-                  key={i}
-                  className={TARGET_PITCH_CLASSES.includes(i) ? 'chroma-bar on' : 'chroma-bar'}
-                  style={{ height: `${v * 100}%` }}
-                />
+              {chroma.map((v, i) => (
+                <div key={i} className={targetNotes.includes(i) ? 'chroma-bar on' : 'chroma-bar'} style={{ height: `${v * 100}%` }} />
               ))}
             </div>
             <div className="chroma-notes">
               {NOTES.map((n, i) => (
-                <span key={n} className={TARGET_PITCH_CLASSES.includes(i) ? 'on' : undefined}>{n}</span>
+                <span key={n} className={targetNotes.includes(i) ? 'on' : undefined}>{n}</span>
               ))}
             </div>
           </section>
@@ -159,20 +158,22 @@ export function Debug({ go }: { go: (route: string) => void }) {
         </div>
 
         <div className="debug-controls">
-          <span className="debug-label">Chord scores (cosine) · simulated</span>
-          {sig.scores.map((s, i) => (
-            <div key={s.name} className={i === 0 ? 'score target' : 'score'}>
-              <span className="score-name">{s.name}</span>
-              <div className="score-track">
-                <div className="score-fill" style={{ width: `${s.value * 100}%` }} />
-                <div className="score-mark" style={{ left: `${th.close * 100}%` }} />
-              </div>
-              <span className="score-value tnum">{s.value.toFixed(2)}</span>
-            </div>
-          ))}
+          <span className="debug-label">Chord scores (cosine) · tap a chord to target it</span>
+          {Object.keys(SCORED).map((name) => {
+            const score = check.scores[name] ?? 0
+            return (
+              <button key={name} className={name === target ? 'score target' : 'score'} aria-pressed={name === target} onClick={() => setTarget(name)}>
+                <span className="score-name">{name}</span>
+                <div className="score-track">
+                  <div className="score-fill" style={{ width: `${score * 100}%` }} />
+                  <div className="score-mark" style={{ left: `${th.close * 100}%` }} />
+                </div>
+                <span className="score-value tnum">{score.toFixed(2)}</span>
+              </button>
+            )
+          })}
           <span className="debug-note">
-            Target margin over next best: <span className="tnum">{margin.toFixed(2)}</span> · hold{' '}
-            {holding ? ((sig.t / 1000) % 2).toFixed(1) : '0.0'} s
+            Target margin over next best: <span className="tnum">{check.lead.toFixed(2)}</span> · hold {(check.hold * 2).toFixed(1)} s
           </span>
 
           <span className="debug-label ruled">Thresholds</span>

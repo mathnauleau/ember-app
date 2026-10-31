@@ -34,6 +34,7 @@ export function Home({ go }: { go: (route: string) => void }) {
           <h1 className="title-display">The fire's burning well.</h1>
           <button className="btn btn-primary" onClick={() => go('/session/tune')}>Start tuning</button>
           <div className="home-links">
+            <button className="btn btn-pill" onClick={() => go('/session/chords')}>Chord drill</button>
             <button className="btn btn-pill" onClick={() => go('/session/strum')}>Strum pattern</button>
             <button className="btn btn-pill" onClick={() => go('/session/time-up')}>Timer ran out</button>
             <button className="btn btn-pill" onClick={() => go('/session/no-mic')}>Without listening</button>

@@ -36,7 +36,7 @@ export function StrumStep({ go }: { go: (route: string) => void }) {
       logsDone={timedOut ? LOGS_BEFORE + 1 : LOGS_BEFORE}
       logsLit={timedOut ? 0 : 1}
       nextLabel={timedOut ? NEXT_STEP : 'Next'}
-      centered
+      background="centered"
       onPauseChange={setPaused}
       onLeave={leave}
       onSkip={leave}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChordDiagram } from '../../components/ChordDiagram'
+import { ChordRing } from '../../components/ChordRing'
 import { MicOff } from '../../components/icons'
 
 const SELF_CHECKS = 3
@@ -12,7 +12,7 @@ export function NoMicDrill({ chord }: {
   return (
     <div className="nomic">
       <div className="nomic-diagram">
-        <ChordDiagram frets={chord.frets} fingers={chord.fingers} label={`${chord.name} ${chord.quality} chord diagram`} />
+        <ChordRing mode="plain" size={460} scale={1.15} frets={chord.frets} fingers={chord.fingers} label={`${chord.name} ${chord.quality} chord diagram`} />
       </div>
       <div className="nomic-panel">
         <div className="nomic-head">
