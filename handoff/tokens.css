@@ -1,0 +1,124 @@
+/* Ember design tokens. Source of truth: the Claude Design project (Campfire *.dc.html). */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Lora:wght@400;600&display=swap');
+
+:root {
+  /* Night ground */
+  --night-950: #0b0f15;   /* screen edge */
+  --night-900: #0f141c;   /* ground */
+  --night-800: #121823;   /* dialog surface */
+  --night-700: #1b2433;   /* glow lift, center of bg gradient */
+  --bg-screen: radial-gradient(ellipse 70% 60% at 45% 52%, var(--night-700) 0%, var(--night-900) 62%, var(--night-950) 100%);
+
+  /* Cream text */
+  --cream-100: #f4e9d8;   /* primary text */
+  --cream-200: #e6dccb;   /* streak numeral */
+  --cream-300: #cfc6b8;   /* body */
+  --cream-500: #a39d93;   /* muted, labels */
+
+  /* Ember accent: stroke and glow, never a solid fill on controls */
+  --ember-200: #ffd58a;   /* flame core, in-tune needle */
+  --ember-300: #f7b77c;   /* text on ember tint, hold arc */
+  --ember-500: #e8823a;   /* accent: borders, icons, kickers */
+  --ember-600: #c8652a;   /* pressed border */
+  --ember-700: #c2410c;   /* flame base */
+
+  /* Tints and lines */
+  --ember-tint-rest: rgba(232,130,58,.10);
+  --ember-tint-selected: rgba(232,130,58,.14);
+  --ember-tint-hover: rgba(232,130,58,.20);
+  --ember-tint-pressed: rgba(232,130,58,.28);
+  --ember-line-soft: rgba(232,130,58,.45);
+  --cream-tint-hover: rgba(244,233,216,.06);
+  --line: rgba(244,233,216,.12);         /* hairline dividers */
+  --line-control: rgba(244,233,216,.18); /* ghost/pill borders */
+  --line-strong: rgba(244,233,216,.30);  /* secondary button border */
+  --scrim: rgba(11,15,21,.74);
+
+  /* Glows */
+  --glow-primary: 0 0 32px rgba(232,130,58,.12);
+  --glow-active: 0 0 28px rgba(232,130,58,.40);
+  --glow-log: 0 0 14px rgba(232,130,58,.55);
+  --shadow-dialog: 0 12px 32px rgba(0,0,0,.40);
+
+  /* Type */
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Lora", Georgia, serif;
+  --fs-display-xl: 190px; /* chord name in drill */
+  --fs-note: 170px;       /* tuner note */
+  --fs-display: 60px;     /* screen titles, weight 400 */
+  --fs-title: 40px;       /* state titles, numerals, weight 400 */
+  --fs-button: 30px;      /* primary, weight 600 */
+  --fs-step: 30px;        /* shell step name, weight 600 */
+  --fs-control: 26px;     /* toggles, secondary, weight 600 */
+  --fs-body-lg: 22px;
+  --fs-body: 20px;
+  --fs-label: 18px;
+  --fs-small: 16px;
+  --fs-kicker: 15px;      /* uppercase, letter-spacing .16em; nothing smaller */
+  --tracking-kicker: .16em;
+  --tracking-display: -.015em;
+
+  /* Spacing */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 40px; --space-8: 48px;
+  --screen-pad-x: 48px;   /* content; bars use 40px */
+  --section-gap: 40px;
+
+  /* Radius */
+  --radius-control: 7px;
+  --radius-primary: 8px;
+  --radius-group: 10px;
+  --radius-pill: 999px;
+
+  /* Tap targets */
+  --target-min: 56px;     /* icon buttons, pills, BPM +/- */
+  --target-toggle: 64px;  /* segmented, secondary, beat cells */
+  --target-primary: 84px; /* Start, Done */
+  --target-string: 108px; /* tuner strings */
+
+  /* Motion */
+  --dur-fast: .15s; --dur-base: .3s; --dur-slow: .6s;
+  --pulse-listening: 3.2s; /* mic ring */
+}
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;
+  font-family:var(--font-display); font-weight:600; color:var(--cream-100); background:transparent; }
+.btn:focus-visible { outline:2px solid var(--ember-500); outline-offset:2px; }
+.btn:disabled { opacity:.45; cursor:default; }
+
+.btn-primary { height:var(--target-primary); padding:0 28px; border-radius:var(--radius-primary);
+  border:1.5px solid var(--ember-500); background:var(--ember-tint-rest); font-size:var(--fs-button); box-shadow:var(--glow-primary); }
+.btn-primary:hover { background:var(--ember-tint-hover); }
+.btn-primary:active { background:var(--ember-tint-pressed); border-color:var(--ember-600); }
+.btn-primary.compact { height:var(--target-toggle); font-size:28px; min-width:220px; box-shadow:none; } /* shell Next */
+
+.btn-secondary { height:var(--target-toggle); padding:0 24px; border-radius:var(--radius-control);
+  border:1px solid var(--line-strong); font-size:var(--fs-control); }
+.btn-secondary:hover { background:var(--cream-tint-hover); }
+.btn-secondary:active { background:rgba(232,130,58,.12); }
+
+.btn-pill { height:var(--target-min); padding:0 20px; border-radius:var(--radius-pill);
+  border:1px solid var(--line-control); font-family:var(--font-body); font-weight:400; font-size:var(--fs-small); color:var(--cream-300); }
+.btn-pill:hover { background:var(--cream-tint-hover); border-color:var(--line-strong); }
+.btn-pill:active { background:var(--ember-tint-selected); }
+
+.btn-icon { width:var(--target-min); height:var(--target-min); padding:0; border-radius:var(--radius-pill); border:1px solid var(--line-control); }
+.btn-icon.square { border-radius:var(--radius-control); border-color:rgba(244,233,216,.22); }
+.btn-icon.play { width:var(--target-toggle); height:var(--target-toggle); border:1.5px solid var(--ember-500); background:var(--ember-tint-rest); }
+
+/* Segmented toggle (15/10 min, Listen/Play, Slow/Normal) */
+.seg { display:flex; gap:4px; padding:4px; border:1px solid rgba(244,233,216,.16); border-radius:var(--radius-group); width:fit-content; }
+.seg-opt { height:var(--target-toggle); padding:0 24px; border-radius:var(--radius-control); border:1.5px solid transparent;
+  font:600 var(--fs-control) var(--font-display); color:var(--cream-300); background:transparent; cursor:pointer; }
+.seg-opt:hover { background:var(--cream-tint-hover); }
+.seg-opt[aria-checked="true"] { border-color:var(--ember-500); background:var(--ember-tint-selected); color:var(--cream-100); }
+
+/* Session progress logs: done = burning, current = lit, upcoming = unlit */
+.log { width:48px; height:22px; border-radius:11px; box-sizing:border-box; }
+.log.done { background:linear-gradient(180deg,var(--ember-300),var(--ember-500) 50%,var(--ember-600)); box-shadow:var(--glow-log); }
+.log.lit { border:1.5px solid var(--ember-500); background:var(--ember-tint-selected); box-shadow:0 0 12px rgba(232,130,58,.3); }
+.log.unlit { border:1px solid rgba(244,233,216,.22); }
+
+.kicker { font:400 var(--fs-kicker) var(--font-body); letter-spacing:var(--tracking-kicker); text-transform:uppercase; color:var(--ember-500); }
+.tnum { font-feature-settings:"tnum"; }
