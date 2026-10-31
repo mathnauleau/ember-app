@@ -66,10 +66,41 @@ describe('tuner', () => {
     expect(t.update(110, 3500, null).done).toEqual([1])
   })
 
-  it('treats exactly +-5 cents as in tune', () => {
+  const atCents = (cents: number) => 110 * 2 ** (cents / 1200)
+
+  it('needs +-5 cents to become in tune', () => {
+    expect(new TunerTracker().update(atCents(4.9), 0, null).inTune).toBe(true)
+    expect(new TunerTracker().update(atCents(5.1), 0, null).inTune).toBe(false)
+  })
+
+  it('stays in tune through a small drift, and leaves on a real one', () => {
     const t = new TunerTracker()
-    expect(t.update(110 * 2 ** (4.9 / 1200), 0, null).inTune).toBe(true)
-    expect(t.update(110 * 2 ** (5.1 / 1200), 0, null).inTune).toBe(false)
+    t.update(atCents(0), 0, null)
+    expect(t.update(atCents(8), 500, null).inTune).toBe(true)
+    expect(t.update(atCents(12), 1000, null).inTune).toBe(false)
+  })
+
+  it('does not snap back in tune until inside +-5 again', () => {
+    const t = new TunerTracker()
+    t.update(atCents(12), 0, null)
+    expect(t.update(atCents(7), 500, null).inTune).toBe(false)
+    expect(t.update(atCents(4), 1000, null).inTune).toBe(true)
+  })
+
+  it('shows a steadied value, so one stray reading does not move it', () => {
+    const t = new TunerTracker()
+    t.update(atCents(0), 0, null)
+    t.update(atCents(1), 30, null)
+    const view = t.update(atCents(20), 60, null)
+    expect(Math.abs(view.cents)).toBeLessThan(2)
+  })
+
+  it('holds the steadied value, not the last wobble of the tail', () => {
+    const t = new TunerTracker()
+    t.update(atCents(0), 0, null)
+    t.update(atCents(1), 30, null)
+    t.update(atCents(-14), 60, null)
+    expect(Math.abs(t.update(null, 90, null).cents)).toBeLessThan(2)
   })
 
   it('keeps a locked string even when another is closer', () => {
