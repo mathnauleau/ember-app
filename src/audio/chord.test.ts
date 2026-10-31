@@ -157,6 +157,13 @@ describe('hold', () => {
     expect(before - t.hold).toBeCloseTo(CHORD.holdDecayPerSecond, 1)
   })
 
+  it('stays warm through a brief dropout', () => {
+    const t = new ChordTracker(0)
+    tick(t, 0, 500, true)
+    expect(tick(t, 600, 800, false, false)).toBe('close')
+    expect(tick(t, 900, 1300, false, false)).toBe('listening')
+  })
+
   it('says try again after sustained wrong sound, then lingers', () => {
     const t = new ChordTracker(0)
     expect(tick(t, 0, 200, false)).toBe('listening')

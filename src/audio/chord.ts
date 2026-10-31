@@ -83,6 +83,7 @@ export class ChordTracker {
   private soundingSince: number | null = null
   private lastSound: number
   private lastMiss = -Infinity
+  private lastClose = -Infinity
 
   constructor(now: number) {
     this.lastSound = now
@@ -101,10 +102,12 @@ export class ChordTracker {
     if (close && sounding) {
       this.hold = Math.min(1, this.hold + dt / CHORD.holdSeconds)
       if (this.hold >= 1) this.held = true
+      this.lastClose = now
       return 'close'
     }
     this.hold = Math.max(0, this.hold - dt * CHORD.holdDecayPerSecond)
 
+    if (now - this.lastClose < CHORD.closeHoldMs) return 'close'
     if (noisy) return 'noisy'
     if (sounding && now - (this.soundingSince ?? now) >= CHORD.retryAfterMs) this.lastMiss = now
     if (now - this.lastMiss < CHORD.retryLingerMs) return 'retry'

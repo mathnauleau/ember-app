@@ -61,9 +61,9 @@ describe('tuner', () => {
     t.update(112, 200, null)
     expect(t.update(110, 300, null).done).toEqual([])
     expect(t.update(110, 650, null).done).toEqual([])
-    t.update(null, 700, null)
-    expect(t.update(110, 800, null).done).toEqual([])
-    expect(t.update(110, 1200, null).done).toEqual([1])
+    t.update(null, 3000, null)
+    expect(t.update(110, 3100, null).done).toEqual([])
+    expect(t.update(110, 3500, null).done).toEqual([1])
   })
 
   it('treats exactly +-5 cents as in tune', () => {
@@ -83,7 +83,28 @@ describe('tuner', () => {
     const t = new TunerTracker()
     t.update(110, 0, null)
     t.update(110, 500, null)
-    expect(t.update(null, 600, null)).toMatchObject({ signal: false, inTune: false, done: [1] })
+    expect(t.update(null, 3000, null)).toMatchObject({ signal: false, inTune: false, done: [1] })
+  })
+
+  it('holds the last reading through a brief dropout', () => {
+    const t = new TunerTracker()
+    t.update(112, 0, null)
+    expect(t.update(null, 90, null)).toMatchObject({ signal: true, active: 1 })
+    expect(t.update(null, 1900, null).signal).toBe(true)
+    expect(t.update(null, 2100, null).signal).toBe(false)
+  })
+
+  it('counts time in tune across a dropout', () => {
+    const t = new TunerTracker()
+    t.update(110, 0, null)
+    t.update(null, 200, null)
+    expect(t.update(110, 400, null).done).toEqual([1])
+  })
+
+  it('does not keep showing the old string after locking another', () => {
+    const t = new TunerTracker()
+    t.update(112, 0, null)
+    expect(t.update(null, 100, 3)).toMatchObject({ signal: false, active: 3 })
   })
 
   it('narrows the range around a locked string so its octave is excluded', () => {

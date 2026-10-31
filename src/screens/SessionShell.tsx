@@ -8,7 +8,7 @@ export function SessionShell(props: {
   stepNumber: number
   totalSteps: number
   phase: string
-  time: string
+  time?: string // left out for steps with no time limit
   timeMuted?: boolean
   logsDone: number
   logsLit: number
@@ -40,10 +40,12 @@ export function SessionShell(props: {
           <span className="shell-phase tnum">Step {props.stepNumber} of {props.totalSteps} · {props.phase}</span>
         </div>
         <Logs total={props.totalSteps} done={props.logsDone} lit={props.logsLit} />
-        <div className="shell-time">
-          <span className={props.timeMuted ? 'shell-clock muted-ink tnum' : 'shell-clock tnum'}>{props.time}</span>
-          <span className="shell-phase">left in this step</span>
-        </div>
+        {props.time && (
+          <div className="shell-time">
+            <span className={props.timeMuted ? 'shell-clock muted-ink tnum' : 'shell-clock tnum'}>{props.time}</span>
+            <span className="shell-phase">left in this step</span>
+          </div>
+        )}
       </header>
 
       {props.children}

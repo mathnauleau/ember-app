@@ -2,6 +2,7 @@ import { centsBetween, nearestStringIndex, STRINGS } from './pitch'
 
 export const IN_TUNE_CENTS = 5
 export const IN_TUNE_HOLD_MS = 400
+export const SIGNAL_HOLD_MS = 2000 // the reading stays up this long after the signal drops, so a fading note can be read
 const LOCK_RANGE_CENTS = 600 // half an octave either side, so a locked string can't read an octave off
 
 export const FULL_RANGE = { minHz: 70, maxHz: 400 }
@@ -24,10 +25,17 @@ export class TunerTracker {
   private active = 0
   private inTuneSince: number | null = null
   private done = new Set<number>()
+  private lastCents = 0
+  private lastHeard = -Infinity
 
   update(hz: number | null, now: number, lock: number | null): TunerView {
-    if (lock !== null) this.active = lock
+    if (lock !== null && lock !== this.active) {
+      this.active = lock
+      this.lastHeard = -Infinity
+    }
     if (hz === null) {
+      // iPadOS can gate a fading note to silence mid-ring: hold the last reading through it.
+      if (now - this.lastHeard < SIGNAL_HOLD_MS) return this.view(this.lastCents, true)
       this.inTuneSince = null
       return this.view(0, false)
     }
@@ -39,6 +47,8 @@ export class TunerTracker {
     }
 
     const cents = centsBetween(hz, STRINGS[string].hz)
+    this.lastCents = cents
+    this.lastHeard = now
     if (Math.abs(cents) > IN_TUNE_CENTS) {
       this.inTuneSince = null
     } else {

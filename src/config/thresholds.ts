@@ -57,4 +57,5 @@ export const CHORD = {
   retryLingerMs: 2500, // the prompt stays this long after the sound stops
   idleAfterMs: 8000, // no sound for this long is the quiet "take your time" state
   stableChangeMs: 300, // a change counts once the new chord holds this long
+  closeHoldMs: 600, // the warm ring stays up this long through a brief dropout
 }

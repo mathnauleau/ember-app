@@ -1,67 +1,48 @@
 import { useCallback, useState } from 'react'
-import { useStepTimer } from '../../audio/useStepTimer'
-import { useTuner } from '../../audio/useTuner'
 import { STRINGS } from '../../audio/pitch'
+import { useTuner } from '../../audio/useTuner'
 import { SessionShell } from '../SessionShell'
 import { Tuner } from '../Tuner'
 import { MicPermission } from './MicPermission'
 import { StepDone } from './StepDone'
-import { TimeUp } from './TimeUp'
 
-const STEP_SECONDS = 60
 const TOTAL_STEPS = 6
 const NEXT_STEP = 'Warm-up' // the session engine (M4) will supply this
 
-const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
-
+// No time limit: tuning takes as long as it takes. It ends at six strings, or on Next.
 export function TuneStep({ go }: { go: (route: string) => void }) {
   const [lock, setLock] = useState<number | null>(null)
-  const [paused, setPaused] = useState(false)
   const [finished, setFinished] = useState(false)
-  const [timedOut, setTimedOut] = useState(false)
 
-  const tuner = useTuner({ lock, active: !finished && !timedOut })
+  const tuner = useTuner({ lock, active: !finished })
   const { status } = tuner.mic.reading
   const needsMic = status === 'idle' || status === 'starting'
-  const allDone = finished || tuner.done.length === STRINGS.length
-
-  const { left, extend } = useStepTimer(STEP_SECONDS, !needsMic && !paused && !allDone && !timedOut)
-  if (left === 0 && !timedOut) setTimedOut(true)
-  if (tuner.done.length === STRINGS.length && !finished) setFinished(true)
+  const allTuned = tuner.done.length === STRINGS.length
+  if (allTuned && !finished) setFinished(true)
 
   const leave = useCallback(() => go('/'), [go])
-  const ended = allDone || timedOut
 
   return (
     <SessionShell
       step="Tune"
       stepNumber={1}
       totalSteps={TOTAL_STEPS}
-      phase={ended ? 'Complete' : 'Auto-detect'}
-      time={clock(allDone ? 0 : left)}
-      timeMuted={timedOut}
-      logsDone={ended ? 1 : 0}
-      logsLit={ended ? 0 : 1}
+      phase={finished ? 'Complete' : 'Auto-detect'}
+      logsDone={finished ? 1 : 0}
+      logsLit={finished ? 0 : 1}
       skipLabel="Skip tuning"
-      nextLabel={ended ? NEXT_STEP : 'Next'}
+      nextLabel={finished ? NEXT_STEP : 'Next'}
       background="centered"
-      onPauseChange={setPaused}
       onLeave={leave}
       onSkip={leave}
-      onNext={leave}
+      onNext={finished ? leave : () => setFinished(true)}
     >
-      {allDone ? (
-        <StepDone title="All six strings in tune." summary="The first log is on the fire." nextStep={NEXT_STEP} onAdvance={leave} />
-      ) : timedOut ? (
-        <TimeUp
-          title="That's tuning for tonight."
-          summary="The log is on the fire."
+      {finished ? (
+        <StepDone
+          title={allTuned ? 'All six strings in tune.' : 'Tuned enough for tonight.'}
+          summary="The first log is on the fire."
           nextStep={NEXT_STEP}
           onAdvance={leave}
-          onExtend={() => {
-            extend(STEP_SECONDS)
-            setTimedOut(false)
-          }}
         />
       ) : needsMic ? (
         <MicPermission
