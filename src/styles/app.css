@@ -95,9 +95,9 @@ input[type=range] { accent-color: var(--ember-500); }
 .cal-retry { height: var(--target-primary); padding: 0 28px; border-radius: var(--radius-primary); }
 
 /* Debug: denser than other screens on purpose */
-.debug { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
-.debug-readouts { display: flex; flex-direction: column; gap: 22px; padding: 24px 32px 24px 40px; border-right: 1px solid var(--line); }
-.debug-controls { display: flex; flex-direction: column; gap: 18px; padding: 24px 40px 24px 32px; overflow: hidden; }
+.debug { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.debug-readouts { display: flex; flex-direction: column; gap: 22px; padding: 24px 32px 24px 40px; border-right: 1px solid var(--line); overflow-y: auto; }
+.debug-controls { display: flex; flex-direction: column; gap: 18px; padding: 24px 40px 24px 32px; overflow-y: auto; }
 .debug-block { display: flex; flex-direction: column; gap: var(--space-2); }
 .debug-head { display: flex; justify-content: space-between; font-size: var(--fs-small); color: var(--cream-300); }
 .debug-label { font-size: var(--fs-kicker); letter-spacing: var(--tracking-kicker); text-transform: uppercase; color: var(--cream-500); }
