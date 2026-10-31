@@ -1,0 +1,82 @@
+import type { ReactNode } from 'react'
+import { ChevronLeft } from './icons'
+
+export function BackBar({ label, title, onBack, children }: {
+  label: string
+  title: string
+  onBack: () => void
+  children?: ReactNode
+}) {
+  return (
+    <header className="topbar">
+      <button className="btn btn-icon" aria-label={label} onClick={onBack}>
+        <ChevronLeft />
+      </button>
+      <span className="topbar-title">{title}</span>
+      {children}
+    </header>
+  )
+}
+
+export function Switch({ checked, label, onChange }: {
+  checked: boolean
+  label: string
+  onChange: (next: boolean) => void
+}) {
+  return (
+    <button
+      className="switch"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+    >
+      <span className="switch-track">
+        <span className="switch-knob" />
+      </span>
+    </button>
+  )
+}
+
+export function Segmented<T extends string | number>({ label, value, options, onChange }: {
+  label: string
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (next: T) => void
+}) {
+  return (
+    <div className="seg" role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button
+          key={o.value}
+          className="seg-opt"
+          role="radio"
+          aria-checked={o.value === value}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function Logs({ total, done, lit = 0 }: { total: number; done: number; lit?: number }) {
+  return (
+    <div className="logs" aria-hidden="true">
+      {Array.from({ length: total }, (_, i) => (
+        <span key={i} className={`log ${i < done ? 'done' : i < done + lit ? 'lit' : 'unlit'}`} />
+      ))}
+    </div>
+  )
+}
+
+export function Dialog({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="scrim">
+      <div className="dialog" role="dialog" aria-modal="true" aria-label={label}>
+        {children}
+      </div>
+    </div>
+  )
+}
