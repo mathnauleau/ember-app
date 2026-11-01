@@ -15,14 +15,16 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body, #root { height: 100%; }
-body { margin: 0; background: var(--night-900); color: var(--cream-100); font: 400 15px/1.55 var(--font-body); }
+html { -webkit-text-size-adjust: 100%; }
+button, input { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; margin: 0; background: var(--night-900); color: var(--cream-100); font: 400 15px/1.55 var(--font-body); }
 h1, h2, p { margin: 0; }
 h1, h2 { letter-spacing: var(--tracking-display); }
 .kicker { line-height: inherit; }
 input[type=range] { accent-color: var(--ember-500); }
 .btn:disabled:hover { background: transparent; }
 
-.screen { position: relative; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-screen); }
+.screen { position: relative; height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); display: flex; flex-direction: column; overflow: hidden; background: var(--bg-screen); }
 .screen-centered { background: radial-gradient(ellipse 70% 60% at 50% 50%, var(--night-700) 0%, var(--night-900) 62%, var(--night-950) 100%); }
 .screen-drill { background: radial-gradient(ellipse 70% 60% at 40% 55%, var(--night-700) 0%, var(--night-900) 62%, var(--night-950) 100%); }
 .screen-flat { background: var(--night-900); }

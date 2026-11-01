@@ -10,7 +10,11 @@ function write(session: Session | null) {
   replaceProgress({ ...getProgress(), session })
 }
 
-export const beginSession = (minutes: SessionMinutes) => write(startSession(today(), minutes))
+export function beginSession(minutes: SessionMinutes) {
+  // Asks Safari to keep the fire through storage clean-ups. Installed apps are already exempt.
+  void navigator.storage?.persist?.().catch(() => {})
+  write(startSession(today(), minutes))
+}
 export const resumeWith = (session: Session) => write(session)
 export const clearSession = () => write(null)
 
