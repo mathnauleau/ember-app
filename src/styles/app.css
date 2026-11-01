@@ -191,6 +191,7 @@ input[type=range] { accent-color: var(--ember-500); }
 .seg-note { font: 400 var(--fs-kicker) var(--font-body); color: var(--cream-500); }
 .seg-opt[aria-checked="true"] .seg-note { color: var(--ember-300); }
 .home-start { width: 100%; gap: 14px; }
+.home-resume { display: flex; flex-direction: column; gap: var(--space-1); }
 .home-logs { flex: none; display: flex; flex-direction: column; gap: 14px; padding: 20px var(--screen-pad-x) 36px; border-top: 1px solid var(--line); }
 .home-logs-head { display: flex; justify-content: space-between; align-items: baseline; }
 .home-log-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 14px; }

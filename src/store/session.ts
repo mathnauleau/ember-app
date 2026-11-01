@@ -6,6 +6,14 @@ import { getProgress, replaceProgress, type NightRecord } from './progress'
 
 const HISTORY_LIMIT = 365
 
+// Whether the person already chose Home over the session. Kept in memory on purpose: the prompt
+// is for coming back after a reload or a new launch, which starts this over.
+let resumePromptDismissed = false
+export const isResumePromptDismissed = () => resumePromptDismissed
+export const dismissResumePrompt = () => {
+  resumePromptDismissed = true
+}
+
 function write(session: Session | null) {
   replaceProgress({ ...getProgress(), session })
 }

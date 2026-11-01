@@ -2,11 +2,12 @@ import { Dialog, Logs } from '../../components/ui'
 import { currentStep, logStates, type Session } from '../../engine/session'
 import { capitalized, plural, words } from '../../lib/words'
 
-export function ResumeDialog({ session, minutesLeft, onResume, onFresh }: {
+export function ResumeDialog({ session, minutesLeft, onResume, onFresh, onLater }: {
   session: Session
   minutesLeft: number
   onResume: () => void
   onFresh: () => void
+  onLater: () => void
 }) {
   const logs = session.logged.length
   const named = `${words(logs)} ${plural(logs, 'log', 'logs')}`
@@ -23,6 +24,7 @@ export function ResumeDialog({ session, minutesLeft, onResume, onFresh }: {
       <div className="dialog-actions">
         <button className="btn btn-primary medium" onClick={onResume}>Resume at {next}</button>
         <button className="btn btn-secondary" onClick={onFresh}>{logs > 0 ? `Start fresh, keep the ${named}` : 'Start fresh'}</button>
+        <button className="btn btn-plain" onClick={onLater}>Not now</button>
       </div>
     </Dialog>
   )

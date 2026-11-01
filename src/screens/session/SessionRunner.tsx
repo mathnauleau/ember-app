@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useWakeLock } from '../../audio/useWakeLock'
 import { currentStep, isComplete, logStates, nextStep, planOf } from '../../engine/session'
-import { completeStep, passOverStep, recordChordPass, recordStrum, setNoMic } from '../../store/session'
+import { completeStep, dismissResumePrompt, passOverStep, recordChordPass, recordStrum, setNoMic } from '../../store/session'
 import { useProgress } from '../../store/progress'
 import { ChordStep } from './ChordStep'
 import type { StepContext } from './context'
@@ -33,7 +33,10 @@ export function SessionRunner({ go }: { go: (route: string) => void }) {
       noMic: session.noMic,
       onDone: completeStep,
       onSkip: passOverStep,
-      onLeave: () => go('/'),
+      onLeave: () => {
+        dismissResumePrompt()
+        go('/')
+      },
       onNoMic: setNoMic,
       onPass: recordChordPass,
       onStrum: recordStrum,

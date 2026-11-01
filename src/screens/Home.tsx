@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { ArrowRight, Flame, Gear, Volume, VolumeOff } from '../components/icons'
 import { HomeFire } from '../components/FireArt'
 import { fireLevel, isBroken, missedDays } from '../engine/streak'
-import { isComplete, minutesLeft, PLANS, restartSession, type SessionMinutes } from '../engine/session'
+import { currentStep, isComplete, minutesLeft, PLANS, restartSession, type SessionMinutes } from '../engine/session'
 import { longDate, nextDay, today, weekdayOf } from '../lib/dates'
 import { count, plural } from '../lib/words'
-import { beginSession, clearSession, resumeWith } from '../store/session'
+import { beginSession, clearSession, dismissResumePrompt, isResumePromptDismissed, resumeWith } from '../store/session'
 import { updateSettings, useProgress } from '../store/progress'
 import { ResumeDialog } from './session/ResumeDialog'
 
@@ -55,11 +55,13 @@ export function Home({ go }: { go: (route: string) => void }) {
   const [minutes, setMinutes] = useState<SessionMinutes>(settings.defaultMinutes)
   const date = today()
   const copy = tonight(streak, lastSessionDate, date)
-  const plan = PLANS[minutes]
 
   // A session left over from another night, or one already finished, can't be picked up.
   const resumable = session && session.date === date && !isComplete(session) ? session : null
   const stale = session !== null && !resumable
+  const shownMinutes = resumable?.minutes ?? minutes
+  const plan = PLANS[shownMinutes]
+  const [prompting, setPrompting] = useState(() => !isResumePromptDismissed())
   useEffect(() => {
     if (stale) clearSession()
   }, [stale])
@@ -69,8 +71,13 @@ export function Home({ go }: { go: (route: string) => void }) {
     go('/session')
   }
 
+  const startFresh = () => {
+    if (resumable) resumeWith(restartSession(resumable))
+    go('/session')
+  }
+
   return (
-    <main className={resumable ? 'screen screen-home dimmed' : 'screen screen-home'}>
+    <main className={resumable && prompting ? 'screen screen-home dimmed' : 'screen screen-home'}>
       <header className="home-bar">
         <Flame size={24} color="var(--ember-500)" />
         <span className="home-brand">Ember</span>
@@ -107,24 +114,36 @@ export function Home({ go }: { go: (route: string) => void }) {
             <h1 className="home-title">{copy.title}</h1>
             <p className="lede lede-lg lede-left">{copy.body}</p>
           </div>
-          <div className="seg" role="radiogroup" aria-label="Session length">
-            {([[15, 'Full'], [10, 'Quick']] as const).map(([value, label]) => (
-              <button key={value} className="seg-opt seg-length" role="radio" aria-checked={minutes === value} onClick={() => setMinutes(value)}>
-                {value} min <span className="seg-note">{label}</span>
+          {!resumable && (
+            <div className="seg" role="radiogroup" aria-label="Session length">
+              {([[15, 'Full'], [10, 'Quick']] as const).map(([value, label]) => (
+                <button key={value} className="seg-opt seg-length" role="radio" aria-checked={minutes === value} onClick={() => setMinutes(value)}>
+                  {value} min <span className="seg-note">{label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {resumable ? (
+            <div className="home-resume">
+              <button className="btn btn-primary home-start" onClick={() => go('/session')}>
+                <span>Resume at {currentStep(resumable)?.name}</span>
+                <ArrowRight size={26} color="var(--ember-500)" />
               </button>
-            ))}
-          </div>
-          <button className="btn btn-primary home-start" onClick={start}>
-            <span>{lastSessionDate === date ? 'Play again' : 'Start tonight’s session'}</span>
-            <ArrowRight size={26} color="var(--ember-500)" />
-          </button>
+              <button className="btn btn-plain" onClick={startFresh}>Start fresh</button>
+            </div>
+          ) : (
+            <button className="btn btn-primary home-start" onClick={start}>
+              <span>{lastSessionDate === date ? 'Play again' : 'Start tonight’s session'}</span>
+              <ArrowRight size={26} color="var(--ember-500)" />
+            </button>
+          )}
         </div>
       </div>
 
       <footer className="home-logs">
         <div className="home-logs-head">
           <span className="debug-label">Tonight’s logs</span>
-          <span className="muted tnum">{minutes} min · {plan.length} logs</span>
+          <span className="muted tnum">{shownMinutes} min · {plan.length} logs</span>
         </div>
         <div className="home-log-row">
           {plan.map((step, i) => (
@@ -137,14 +156,15 @@ export function Home({ go }: { go: (route: string) => void }) {
         </div>
       </footer>
 
-      {resumable && (
+      {resumable && prompting && (
         <ResumeDialog
           session={resumable}
           minutesLeft={minutesLeft(resumable)}
           onResume={() => go('/session')}
-          onFresh={() => {
-            resumeWith(restartSession(resumable))
-            go('/session')
+          onFresh={startFresh}
+          onLater={() => {
+            dismissResumePrompt()
+            setPrompting(false)
           }}
         />
       )}
