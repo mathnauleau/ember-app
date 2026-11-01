@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  canResume,
   currentStep,
   finishStep,
   isComplete,
@@ -112,5 +113,27 @@ describe('streak', () => {
     expect(fireLevel('2026-10-30', '2026-11-02')).toBe('dim')
     expect(fireLevel('2026-10-30', '2026-11-03')).toBe('embers')
     expect(fireLevel('2026-10-30', '2027-06-01')).toBe('embers')
+  })
+})
+
+describe('resuming', () => {
+  const day = '2026-10-31'
+
+  it('offers nothing to resume at the very first step', () => {
+    expect(canResume(startSession(day, 15))).toBe(false)
+  })
+
+  it('offers a place to come back to once past it', () => {
+    expect(canResume(finishStep(startSession(day, 15)))).toBe(true)
+  })
+
+  it('offers nothing once complete', () => {
+    let s = startSession(day, 10)
+    for (let i = 0; i < 4; i++) s = finishStep(s)
+    expect(canResume(s)).toBe(false)
+  })
+
+  it('has nothing to resume right after starting fresh', () => {
+    expect(canResume(restartSession(finishStep(startSession(day, 15))))).toBe(false)
   })
 })

@@ -21,7 +21,11 @@ function write(session: Session | null) {
 export function beginSession(minutes: SessionMinutes) {
   // Asks Safari to keep the fire through storage clean-ups. Installed apps are already exempt.
   void navigator.storage?.persist?.().catch(() => {})
-  write(startSession(today(), minutes))
+  const date = today()
+  // Tonight's earned logs and chord pass carry into a fresh start.
+  const earlier = getProgress().session
+  const kept = earlier?.date === date ? { logged: earlier.logged, passed: earlier.passed, newChord: earlier.newChord } : {}
+  write({ ...startSession(date, minutes), ...kept })
 }
 export const resumeWith = (session: Session) => write(session)
 export const clearSession = () => write(null)

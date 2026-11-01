@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowRight, Flame, Gear, Volume, VolumeOff } from '../components/icons'
 import { HomeFire } from '../components/FireArt'
 import { fireLevel, isBroken, missedDays } from '../engine/streak'
-import { currentStep, isComplete, minutesLeft, PLANS, restartSession, type SessionMinutes } from '../engine/session'
+import { canResume, currentStep, minutesLeft, PLANS, restartSession, type SessionMinutes } from '../engine/session'
 import { longDate, nextDay, today, weekdayOf } from '../lib/dates'
 import { count, plural } from '../lib/words'
 import { beginSession, clearSession, dismissResumePrompt, isResumePromptDismissed, resumeWith } from '../store/session'
@@ -57,8 +57,9 @@ export function Home({ go }: { go: (route: string) => void }) {
   const copy = tonight(streak, lastSessionDate, date)
 
   // A session left over from another night, or one already finished, can't be picked up.
-  const resumable = session && session.date === date && !isComplete(session) ? session : null
-  const stale = session !== null && !resumable
+  const tonights = session && session.date === date ? session : null
+  const resumable = tonights && canResume(tonights) ? tonights : null
+  const stale = session !== null && (!tonights || tonights.index >= PLANS[tonights.minutes].length)
   const shownMinutes = resumable?.minutes ?? minutes
   const plan = PLANS[shownMinutes]
   const [prompting, setPrompting] = useState(() => !isResumePromptDismissed())
@@ -71,9 +72,9 @@ export function Home({ go }: { go: (route: string) => void }) {
     go('/session')
   }
 
+  // Stays on Home: the logs are kept, and the next Start begins from the top.
   const startFresh = () => {
     if (resumable) resumeWith(restartSession(resumable))
-    go('/session')
   }
 
   return (

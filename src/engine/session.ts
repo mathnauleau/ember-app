@@ -54,8 +54,11 @@ export function skipStep(session: Session): Session {
   return { ...session, index: session.index + 1 }
 }
 
-// Starting fresh runs the plan again from the top, and what's already burning stays lit.
+// Starting fresh goes back to the top of the plan, and what's already burning stays lit.
 export const restartSession = (session: Session): Session => ({ ...session, index: 0 })
+
+// Past the first step there's a place to come back to. At the top there's nothing to resume.
+export const canResume = (session: Session) => session.index > 0 && !isComplete(session)
 
 export function minutesLeft(session: Session) {
   const rest = planOf(session).slice(session.index).reduce((sum, s) => sum + s.minutes, 0)
