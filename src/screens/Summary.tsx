@@ -1,16 +1,17 @@
 import { useEffect } from 'react'
-import { ArrowRight, Flame, Volume, VolumeOff } from '../components/icons'
+import { ArrowRight, Flame } from '../components/icons'
+import { CrackleToggle } from '../components/CrackleToggle'
 import { SummaryFire } from '../components/FireArt'
 import chordData from '../data/chords.json'
 import { currentSong, learnedChords, patternFor, theoryCard } from '../engine/curriculum'
 import { longDate, today } from '../lib/dates'
 import { count, plural } from '../lib/words'
 import { clearSession, markTheorySeen } from '../store/session'
-import { updateSettings, useProgress } from '../store/progress'
+import { useProgress } from '../store/progress'
 
 export function Summary({ go }: { go: (route: string) => void }) {
   const progress = useProgress()
-  const { session, settings, streak, streakBefore, lastSessionDate, learnedCount, patternLevel } = progress
+  const { session, streak, streakBefore, lastSessionDate, learnedCount, patternLevel } = progress
   const quick = session?.minutes === 10
 
   useEffect(() => {
@@ -57,15 +58,7 @@ export function Summary({ go }: { go: (route: string) => void }) {
         <span className="home-rule" />
         <span className="home-date">{longDate()}</span>
         <span className="spacer" />
-        <button
-          className="btn btn-pill"
-          aria-label="Toggle crackle sound"
-          aria-pressed={settings.sound}
-          onClick={() => updateSettings({ sound: !settings.sound })}
-        >
-          {settings.sound ? <Volume color="var(--ember-500)" /> : <VolumeOff color="var(--cream-500)" />}
-          Crackle {settings.sound ? 'on' : 'off'}
-        </button>
+        <CrackleToggle />
       </header>
 
       <div className="summary">

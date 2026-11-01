@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getProgress } from '../store/progress'
-import { audioUnlocked, IDLE_READING, micErrorMessage, startMic, unlockAudio, type MicReading } from './mic'
+import { IDLE_READING, micErrorMessage, micReady, startMic, unlockAudio, type MicReading } from './mic'
 import type { Onset } from './strumTiming'
 import { FULL_RANGE } from './tuner'
 
@@ -67,7 +67,7 @@ export function useMic({ active = true, range = FULL_RANGE, onOnset, chroma = fa
   }, [open])
 
   useEffect(() => {
-    if (active && audioUnlocked()) void open()
+    if (active && micReady()) void open()
     return stop
   }, [active, open, stop])
 

@@ -43,6 +43,23 @@ export const IDLE_READING: MicReading = {
 
 let sharedContext: AudioContext | null = null
 let workletLoaded: Promise<void> | null = null
+let micAllowed = false
+let openMics = 0
+const micListeners = new Set<() => void>()
+
+function countMic(change: 1 | -1) {
+  openMics += change
+  micListeners.forEach((listener) => listener())
+}
+
+export const micListening = () => openMics > 0
+
+export function subscribeMicListening(listener: () => void) {
+  micListeners.add(listener)
+  return () => {
+    micListeners.delete(listener)
+  }
+}
 
 // One context for mic, metronome and synth, first created inside a tap (iOS requires it).
 export function unlockAudio() {
@@ -51,7 +68,12 @@ export function unlockAudio() {
   return sharedContext
 }
 
+export const audioContext = () => sharedContext
+
 export const audioUnlocked = () => sharedContext?.state === 'running'
+
+// Any tap can unlock audio, but the mic only opens by itself once it has been allowed here.
+export const micReady = () => micAllowed && audioUnlocked()
 
 export function micErrorMessage(error: unknown) {
   const name = error instanceof DOMException ? error.name : ''
@@ -83,9 +105,14 @@ export async function startMic(options: {
   }
 
   const context = unlockAudio()
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-  })
+  countMic(1)
+  const stream = await navigator.mediaDevices
+    .getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
+    .catch((error: unknown) => {
+      countMic(-1)
+      throw error
+    })
+  micAllowed = true
   void context.resume()
 
   const source = context.createMediaStreamSource(stream)
@@ -242,5 +269,6 @@ export async function startMic(options: {
     onsetNode?.disconnect()
     spectrumNode?.disconnect()
     mute.disconnect()
+    countMic(-1)
   }
 }

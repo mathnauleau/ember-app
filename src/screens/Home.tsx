@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, Flame, Gear, Volume, VolumeOff } from '../components/icons'
+import { ArrowRight, Flame, Gear } from '../components/icons'
+import { CrackleToggle } from '../components/CrackleToggle'
 import { HomeFire } from '../components/FireArt'
 import { fireLevel, isBroken, missedDays } from '../engine/streak'
 import { canResume, currentStep, minutesLeft, PLANS, restartSession, type SessionMinutes } from '../engine/session'
 import { longDate, nextDay, today, weekdayOf } from '../lib/dates'
 import { count, plural } from '../lib/words'
 import { beginSession, clearSession, dismissResumePrompt, isResumePromptDismissed, resumeWith } from '../store/session'
-import { updateSettings, useProgress } from '../store/progress'
+import { useProgress } from '../store/progress'
 import { ResumeDialog } from './session/ResumeDialog'
 
 function tonight(streak: number, last: string | null, date: string) {
@@ -88,15 +89,7 @@ export function Home({ go }: { go: (route: string) => void }) {
         <button className="btn btn-icon" aria-label="Settings" onClick={() => go('/settings')}>
           <Gear />
         </button>
-        <button
-          className="btn btn-pill"
-          aria-label="Toggle crackle sound"
-          aria-pressed={settings.sound}
-          onClick={() => updateSettings({ sound: !settings.sound })}
-        >
-          {settings.sound ? <Volume color="var(--ember-500)" /> : <VolumeOff color="var(--cream-500)" />}
-          Crackle {settings.sound ? 'on' : 'off'}
-        </button>
+        <CrackleToggle />
       </header>
 
       <div className="home-main">

@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from 'react'
-import { ArrowRight, Check, Close, SkipForward, Volume, VolumeOff } from '../components/icons'
+import { ArrowRight, Check, Close, SkipForward } from '../components/icons'
+import { CrackleToggle } from '../components/CrackleToggle'
 import { Dialog, Logs } from '../components/ui'
 import type { LogState } from '../engine/session'
-import { updateSettings, useProgress } from '../store/progress'
 
 export function SessionShell(props: {
   step: string
@@ -22,7 +22,6 @@ export function SessionShell(props: {
   onNext: () => void
   children: ReactNode
 }) {
-  const { sound } = useProgress().settings
   const [paused, setPaused] = useState(false)
 
   const pause = (next: boolean) => {
@@ -57,15 +56,7 @@ export function SessionShell(props: {
           {props.skipLabel ?? 'Skip'}
         </button>
         <span className="spacer" />
-        <button
-          className="btn btn-pill"
-          aria-label="Toggle crackle sound"
-          aria-pressed={sound}
-          onClick={() => updateSettings({ sound: !sound })}
-        >
-          {sound ? <Volume color="var(--ember-500)" /> : <VolumeOff color="var(--cream-500)" />}
-          Crackle {sound ? 'on' : 'off'}
-        </button>
+        <CrackleToggle />
         <button className="btn btn-primary compact" onClick={props.onNext}>
           <span>{props.nextLabel}</span>
           {props.nextIcon === 'check' ? <Check color="var(--ember-500)" /> : <ArrowRight color="var(--ember-500)" />}

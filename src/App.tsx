@@ -1,4 +1,5 @@
 import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useCrackle } from './audio/useCrackle'
 import { Calibration } from './screens/Calibration'
 import { Debug } from './screens/Debug'
 import { Home } from './screens/Home'
@@ -45,6 +46,7 @@ function SingleStep({ id, query, go }: { id: StepId; query?: string; go: (route:
 }
 
 export function App() {
+  useCrackle()
   const [route, query] = useSyncExternalStore(subscribe, readRoute).split('?')
 
   switch (route) {
