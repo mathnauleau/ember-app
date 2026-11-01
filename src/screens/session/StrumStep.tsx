@@ -1,53 +1,57 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { useStepTimer } from '../../audio/useStepTimer'
 import { useStrum } from '../../audio/useStrum'
 import chords from '../../data/chords.json'
 import patterns from '../../data/patterns.json'
+import { drillPair, patternFor } from '../../engine/curriculum'
+import { useProgress } from '../../store/progress'
 import { SessionShell } from '../SessionShell'
 import { Strum } from '../Strum'
+import { finishedLogs, type StepContext } from './context'
 import { MicPermission } from './MicPermission'
 import { TimeUp } from './TimeUp'
 
-const STEP_SECONDS = 240
-const TOTAL_STEPS = 6
-const NEXT_STEP = 'Song' // the session engine (M4) will supply this
-const LOGS_BEFORE = 3
-
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
-export function StrumStep({ go }: { go: (route: string) => void }) {
+export function StrumStep({ context, patternId }: { context: StepContext; patternId?: string }) {
+  const { patternLevel, learnedCount, setPasses } = useProgress()
+  const [pattern] = useState(() => patterns.find((p) => p.id === patternId) ?? patternFor(patternLevel))
+  const [chord] = useState(() => drillPair(learnedCount, setPasses)[0] as keyof typeof chords)
   const [paused, setPaused] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
-  const strum = useStrum({ pattern: patterns[0], frets: chords.G.frets, active: !timedOut, held: paused })
-  const { left, extend } = useStepTimer(STEP_SECONDS, strum.micReady && !paused && !timedOut)
+  const strum = useStrum({ pattern, frets: chords[chord].frets, active: !timedOut, held: paused, noMic: context.noMic })
+  const { left, extend } = useStepTimer(context.minutes * 60, strum.micReady && !paused && !timedOut)
   if (left === 0 && !timedOut) setTimedOut(true)
 
-  const leave = useCallback(() => go('/'), [go])
   const needsMic = !strum.micReady
+
+  const finish = () => {
+    context.onStrum?.(strum.bars.current.onTime, strum.bars.current.total)
+    context.onDone()
+  }
 
   return (
     <SessionShell
       step="Strum pattern"
-      stepNumber={4}
-      totalSteps={TOTAL_STEPS}
+      stepNumber={context.stepNumber}
+      totalSteps={context.totalSteps}
       phase={timedOut ? 'Complete' : strum.phase === 'listen' ? 'Listen' : 'Play'}
       time={clock(left)}
       timeMuted={timedOut}
-      logsDone={timedOut ? LOGS_BEFORE + 1 : LOGS_BEFORE}
-      logsLit={timedOut ? 0 : 1}
-      nextLabel={timedOut ? NEXT_STEP : 'Next'}
+      logs={finishedLogs(context, timedOut)}
+      nextLabel={timedOut ? context.nextName : 'Next'}
       background="centered"
       onPauseChange={setPaused}
-      onLeave={leave}
-      onSkip={leave}
-      onNext={leave}
+      onLeave={context.onLeave}
+      onSkip={context.onSkip}
+      onNext={finish}
     >
       {timedOut ? (
         <TimeUp
           title="That's the strumming for tonight."
           summary="The log is on the fire."
-          nextStep={NEXT_STEP}
-          onAdvance={leave}
+          nextStep={context.nextName}
+          onAdvance={finish}
           onExtend={() => {
             extend(60)
             setTimedOut(false)
@@ -59,11 +63,11 @@ export function StrumStep({ go }: { go: (route: string) => void }) {
           error={strum.mic.error}
           starting={strum.mic.reading.status === 'starting'}
           onAllow={strum.mic.start}
-          onWithout={() => go('/session/no-mic')}
+          onWithout={() => context.onNoMic(true)}
         />
       ) : (
         <Strum
-          pattern={patterns[0]}
+          pattern={pattern}
           phase={strum.phase}
           onPhase={strum.setPhase}
           position={strum.position}

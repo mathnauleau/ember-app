@@ -10,6 +10,7 @@ export class OnsetDetector {
   private baseline = 0
   private lastOnset = -Infinity
   private warmupFrames: number
+  private pending: { frame: number; peak: number; framesLeft: number } | null = null
   private readonly refractory: number
   private readonly smoothing: number
 
@@ -30,6 +31,14 @@ export class OnsetDetector {
 
       const frameEnergy = this.energy / ONSET.hopSize
       const frame = startFrame + i - ONSET.hopSize + 1
+      // The first frame catches a strum at a random point of its attack, so strength waits for the peak.
+      if (this.pending) {
+        this.pending.peak = Math.max(this.pending.peak, frameEnergy)
+        if (--this.pending.framesLeft === 0) {
+          onsets.push({ frame: this.pending.frame, strength: this.pending.peak })
+          this.pending = null
+        }
+      }
       if (this.warmupFrames > 0) {
         this.warmupFrames -= 1
       } else if (
@@ -37,7 +46,7 @@ export class OnsetDetector {
         frameEnergy > ONSET.minEnergy &&
         frame - this.lastOnset >= this.refractory
       ) {
-        onsets.push({ frame, strength: frameEnergy })
+        this.pending = { frame, peak: frameEnergy, framesLeft: ONSET.peakFrames }
         this.lastOnset = frame
       }
       this.baseline += (frameEnergy - this.baseline) * this.smoothing

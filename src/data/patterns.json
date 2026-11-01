@@ -1,3 +1,7 @@
 [
-  { "id": "folk", "name": "Folk strum", "level": 2, "bpm": 72, "slots": ["D", "_", "D", "U", "_", "U", "D", "U"] }
+  { "id": "steady", "name": "Steady strum", "level": 1, "bpm": 66, "slots": ["D", "_", "D", "_", "D", "_", "D", "U"] },
+  { "id": "folk", "name": "Folk strum", "level": 2, "bpm": 72, "slots": ["D", "_", "D", "U", "_", "U", "D", "U"] },
+  { "id": "shuffle", "name": "Campfire strum", "level": 3, "bpm": 76, "slots": ["D", "_", "D", "U", "D", "U", "D", "U"] },
+  { "id": "gallop", "name": "Gallop", "level": 4, "bpm": 80, "slots": ["D", "U", "_", "U", "D", "U", "_", "U"] },
+  { "id": "offbeat", "name": "Off-beat", "level": 5, "bpm": 84, "slots": ["D", "_", "_", "U", "_", "U", "D", "U"] }
 ]

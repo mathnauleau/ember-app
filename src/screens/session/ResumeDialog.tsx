@@ -1,31 +1,28 @@
 import { Dialog, Logs } from '../../components/ui'
-import type { SavedSession } from '../../store/progress'
+import { currentStep, logStates, type Session } from '../../engine/session'
+import { capitalized, plural, words } from '../../lib/words'
 
-const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six']
-const capitalize = (s: string) => s[0].toUpperCase() + s.slice(1)
-
-export function ResumeDialog({ session, onResume, onFresh }: {
-  session: SavedSession
+export function ResumeDialog({ session, minutesLeft, onResume, onFresh }: {
+  session: Session
+  minutesLeft: number
   onResume: () => void
   onFresh: () => void
 }) {
-  const { logsDone, nextStep, minutesLeft, totalSteps } = session
-  const logs = `${WORDS[logsDone] ?? logsDone} ${logsDone === 1 ? 'log' : 'logs'}`
-  const are = logsDone === 1 ? 'is' : 'are'
+  const logs = session.logged.length
+  const named = `${words(logs)} ${plural(logs, 'log', 'logs')}`
+  const next = currentStep(session)?.name
 
   return (
     <Dialog label="Pick up where you left off?">
       <span className="kicker">Tonight's session</span>
       <h2 className="dialog-title">Pick up where you left off?</h2>
-      <Logs total={totalSteps} done={logsDone} lit={1} />
+      <Logs states={logStates(session)} />
       <p className="dialog-body">
-        {capitalize(logs)} {are} already on. Next up is {nextStep}, with about {minutesLeft} minutes to go.
+        {capitalized(named)} {logs === 1 ? 'is' : 'are'} already on. Next up is {next}, with about {minutesLeft} {plural(minutesLeft, 'minute', 'minutes')} to go.
       </p>
       <div className="dialog-actions">
-        <button className="btn btn-primary medium" onClick={onResume}>Resume at {nextStep}</button>
-        <button className="btn btn-secondary" onClick={onFresh}>
-          {logsDone > 0 ? `Start fresh, keep the ${logs}` : 'Start fresh'}
-        </button>
+        <button className="btn btn-primary medium" onClick={onResume}>Resume at {next}</button>
+        <button className="btn btn-secondary" onClick={onFresh}>{logs > 0 ? `Start fresh, keep the ${named}` : 'Start fresh'}</button>
       </div>
     </Dialog>
   )

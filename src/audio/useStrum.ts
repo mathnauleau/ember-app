@@ -3,6 +3,7 @@ import { getProgress, updateBpm, useProgress } from '../store/progress'
 import { SLOTS_PER_BAR } from './metronome'
 import { barVerdict, bpmFromTaps, matchOnsets, type GridSlot, type Onset, type Verdict } from './strumTiming'
 import { strum } from './synth'
+import { audioUnlocked } from './mic'
 import { useMetronome, type SlotRecord } from './useMetronome'
 import { useMic } from './useMic'
 
@@ -13,24 +14,27 @@ const LISTEN_BARS = 2
 const TAP_WINDOW_MS = 3000
 const MAX_TAPS = 5
 
-export function useStrum({ pattern, frets, active, held }: {
+export function useStrum({ pattern, frets, active, held, noMic }: {
   pattern: StrumPattern
   frets: number[]
   active: boolean
   held: boolean // pause dialog open: the click rests, the mic stays on
+  noMic: boolean // practising without listening: the pattern plays, with no timing feedback
 }) {
   const { settings, thresholds } = useProgress()
   const bpm = settings.bpmByPattern[pattern.id] ?? pattern.bpm
   const onsets = useRef<Onset[]>([])
-  const mic = useMic({ active, onOnset: (onset) => onsets.current.push(onset) })
+  const mic = useMic({ active: active && !noMic, onOnset: (onset) => onsets.current.push(onset) })
   const [phase, setPhaseState] = useState<StrumPhase>('listen')
   const [feedback, setFeedback] = useState<Verdict | 'thin' | null>(null)
-  const [paused, setPaused] = useState(false)
+  // Without an earlier mic step audio isn't unlocked yet, so it starts on the first tap.
+  const [paused, setPaused] = useState(() => noMic && !audioUnlocked())
   const [listenBar, setListenBar] = useState(1)
   const phaseRef = useRef<StrumPhase>('listen')
   const listenFrom = useRef(0)
   const playFrom = useRef<number | null>(null)
   const taps = useRef<number[]>([])
+  const bars = useRef({ onTime: 0, total: 0 })
 
   const onSlot = useCallback(
     ({ index, time }: SlotRecord, context: AudioContext) => {
@@ -54,7 +58,7 @@ export function useStrum({ pattern, frets, active, held }: {
 
   const metronome = useMetronome({ bpm, onSlot })
   const { slot, running, slots, start, stop } = metronome
-  const micReady = !['idle', 'starting'].includes(mic.reading.status)
+  const micReady = noMic || !['idle', 'starting'].includes(mic.reading.status)
   const latencyS = useRef(0)
   latencyS.current = mic.reading.latencyMs / 1000
 
@@ -94,7 +98,9 @@ export function useStrum({ pattern, frets, active, held }: {
       latencyS: latencyS.current,
       offsetS: (getProgress().settings.latencyOffsetMs ?? 0) / 1000,
     })
-    setFeedback(barVerdict(offsets, thresholds.onTime)?.verdict ?? 'thin')
+    const verdict = barVerdict(offsets, thresholds.onTime)?.verdict
+    if (verdict) bars.current = { onTime: bars.current.onTime + (verdict === 'on' ? 1 : 0), total: bars.current.total + 1 }
+    setFeedback(verdict ?? 'thin')
     onsets.current = onsets.current.filter((o) => o.time >= bar[bar.length - 1].time)
   }, [slot, slots, pattern, thresholds.onTime])
 
@@ -126,6 +132,7 @@ export function useStrum({ pattern, frets, active, held }: {
     stepBpm,
     tap,
     feedback,
+    bars,
     listenBar,
     position: running && slot >= 0 ? slot % SLOTS_PER_BAR : 2,
     micReady,

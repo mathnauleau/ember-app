@@ -4,8 +4,9 @@ import { MicOff } from '../../components/icons'
 
 const SELF_CHECKS = 3
 
-export function NoMicDrill({ chord }: {
+export function NoMicDrill({ chord, onListen }: {
   chord: { name: string; quality: string; frets: number[]; fingers: number[] }
+  onListen: () => void
 }) {
   const [count, setCount] = useState(0)
 
@@ -35,8 +36,7 @@ export function NoMicDrill({ chord }: {
         >
           Sounds right · {count} of {SELF_CHECKS}
         </button>
-        {/* Enabled once ChordDrill exists to go back to (M3). */}
-        <button className="btn btn-plain" disabled>Turn listening on</button>
+        <button className="btn btn-plain" onClick={onListen}>Turn listening on</button>
       </div>
     </div>
   )

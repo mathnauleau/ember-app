@@ -1,0 +1,78 @@
+[
+  {
+    "title": "A chord is 3+ notes played together.",
+    "notes": ["E", "G", "B"],
+    "caption": "Your Em chord rings E, G and B at the same time.",
+    "dots": [
+      { "s": 5, "f": 0, "label": "E", "kind": "open" },
+      { "s": 4, "f": 2, "label": "B", "kind": "note" },
+      { "s": 3, "f": 2, "label": "E", "kind": "note" },
+      { "s": 2, "f": 0, "label": "G", "kind": "open" },
+      { "s": 1, "f": 0, "label": "B", "kind": "open" },
+      { "s": 0, "f": 0, "label": "E", "kind": "open" }
+    ]
+  },
+  {
+    "title": "Your six strings are E, A, D, G, B, E.",
+    "notes": ["E", "A", "D", "G", "B", "E"],
+    "caption": "Thick to thin. Eddie Ate Dynamite, Good Bye Eddie.",
+    "dots": [
+      { "s": 5, "f": 0, "label": "E", "kind": "open" },
+      { "s": 4, "f": 0, "label": "A", "kind": "open" },
+      { "s": 3, "f": 0, "label": "D", "kind": "open" },
+      { "s": 2, "f": 0, "label": "G", "kind": "open" },
+      { "s": 1, "f": 0, "label": "B", "kind": "open" },
+      { "s": 0, "f": 0, "label": "E", "kind": "open" }
+    ]
+  },
+  {
+    "title": "Each fret raises a note by one half step.",
+    "notes": ["E", "F", "F♯", "G"],
+    "caption": "Walk up the low E string: E, F, F sharp, G.",
+    "dots": [
+      { "s": 5, "f": 0, "label": "E", "kind": "open" },
+      { "s": 5, "f": 1, "label": "F", "kind": "note" },
+      { "s": 5, "f": 2, "label": "F♯", "kind": "note" },
+      { "s": 5, "f": 3, "label": "G", "kind": "note" }
+    ]
+  },
+  {
+    "title": "Your two E strings are the same note.",
+    "notes": ["E", "E"],
+    "caption": "They sit two octaves apart, so they ring together cleanly.",
+    "dots": [
+      { "s": 5, "f": 0, "label": "E", "kind": "open" },
+      { "s": 0, "f": 0, "label": "E", "kind": "open" }
+    ]
+  },
+  {
+    "title": "One note changes major into minor.",
+    "notes": ["A", "C", "E"],
+    "caption": "Am has a C. Lift it to C sharp and you have A major.",
+    "dots": [
+      { "s": 4, "f": 0, "label": "A", "kind": "open" },
+      { "s": 3, "f": 2, "label": "E", "kind": "note" },
+      { "s": 2, "f": 2, "label": "A", "kind": "note" },
+      { "s": 1, "f": 1, "label": "C", "kind": "note" },
+      { "s": 0, "f": 0, "label": "E", "kind": "open" }
+    ]
+  },
+  {
+    "title": "The root is the note a chord is named after.",
+    "notes": ["D"],
+    "caption": "In a D chord, start your strum on the open D string.",
+    "dots": [{ "s": 3, "f": 0, "label": "D", "kind": "open" }]
+  },
+  {
+    "title": "A bar is a small box of beats.",
+    "notes": ["1", "2", "3", "4"],
+    "caption": "Most songs here count four beats, then start the next bar.",
+    "dots": []
+  },
+  {
+    "title": "Down strums land on the beat, up strums between.",
+    "notes": ["1", "&", "2", "&"],
+    "caption": "Keep your hand moving, even when it doesn't touch the strings.",
+    "dots": []
+  }
+]

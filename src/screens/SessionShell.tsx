@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
-import { ArrowRight, Close, SkipForward, Volume, VolumeOff } from '../components/icons'
+import { ArrowRight, Check, Close, SkipForward, Volume, VolumeOff } from '../components/icons'
 import { Dialog, Logs } from '../components/ui'
+import type { LogState } from '../engine/session'
 import { updateSettings, useProgress } from '../store/progress'
 
 export function SessionShell(props: {
@@ -10,10 +11,10 @@ export function SessionShell(props: {
   phase: string
   time?: string // left out for steps with no time limit
   timeMuted?: boolean
-  logsDone: number
-  logsLit: number
+  logs: LogState[]
   skipLabel?: string
   nextLabel: string
+  nextIcon?: 'arrow' | 'check'
   background?: 'centered' | 'drill'
   onPauseChange?: (paused: boolean) => void
   onLeave: () => void
@@ -39,7 +40,7 @@ export function SessionShell(props: {
           <span className="topbar-title">{props.step}</span>
           <span className="shell-phase tnum">Step {props.stepNumber} of {props.totalSteps} · {props.phase}</span>
         </div>
-        <Logs total={props.totalSteps} done={props.logsDone} lit={props.logsLit} />
+        <Logs states={props.logs} />
         {props.time && (
           <div className="shell-time">
             <span className={props.timeMuted ? 'shell-clock muted-ink tnum' : 'shell-clock tnum'}>{props.time}</span>
@@ -67,7 +68,7 @@ export function SessionShell(props: {
         </button>
         <button className="btn btn-primary compact" onClick={props.onNext}>
           <span>{props.nextLabel}</span>
-          <ArrowRight color="var(--ember-500)" />
+          {props.nextIcon === 'check' ? <Check color="var(--ember-500)" /> : <ArrowRight color="var(--ember-500)" />}
         </button>
       </footer>
 

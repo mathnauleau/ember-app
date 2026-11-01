@@ -1,5 +1,8 @@
 import { useSyncExternalStore } from 'react'
 import { DEFAULT_THRESHOLDS, type Thresholds } from '../config/thresholds'
+import curriculum from '../data/curriculum.json'
+import patterns from '../data/patterns.json'
+import { PLANS, type Session, type StepId } from '../engine/session'
 
 const KEY = 'ember.progress'
 const BACKUP_VERSION = 1
@@ -15,19 +18,26 @@ export type Settings = {
   bpmByPattern: Record<string, number>
 }
 
-export type SavedSession = {
-  logsDone: number
-  totalSteps: number
-  nextStep: string
-  minutesLeft: number
-}
+export type NightRecord = { date: string; minutes: number; logs: string[] }
 
 export type Progress = {
   settings: Settings
   thresholds: Thresholds
   thresholdsRev: number
   lastBackupOn: string | null
-  session: SavedSession | null
+  session: Session | null
+  streak: number
+  streakBefore: number // nights kept when the streak last reset
+  lastSessionDate: string | null
+  history: NightRecord[]
+  passCounts: Record<string, number>
+  learnedCount: number
+  setPasses: number // sessions passed on the current chord set
+  patternLevel: number
+  strumGood: number // sessions with half the bars on time at this level
+  currentSong: string | null
+  theorySeen: number
+  theoryDate: string | null
 }
 
 export const DEFAULT_PROGRESS: Progress = {
@@ -44,6 +54,18 @@ export const DEFAULT_PROGRESS: Progress = {
   thresholdsRev: THRESHOLDS_REV,
   lastBackupOn: null,
   session: null,
+  streak: 0,
+  streakBefore: 0,
+  lastSessionDate: null,
+  history: [],
+  passCounts: {},
+  learnedCount: curriculum.learned,
+  setPasses: 0,
+  patternLevel: 1,
+  strumGood: 0,
+  currentSong: null,
+  theorySeen: 0,
+  theoryDate: null,
 }
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -53,14 +75,26 @@ const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fa
 const numOrNull = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 const strOrNull = (v: unknown) => (typeof v === 'string' ? v : null)
 
-function readSession(v: unknown): SavedSession | null {
-  if (!isRecord(v) || typeof v.nextStep !== 'string') return null
-  return {
-    logsDone: num(v.logsDone, 0),
-    totalSteps: num(v.totalSteps, 6),
-    nextStep: v.nextStep,
-    minutesLeft: num(v.minutesLeft, 0),
-  }
+const STEP_IDS = PLANS[15].map((step) => step.id)
+
+function readSession(v: unknown): Session | null {
+  if (!isRecord(v) || typeof v.date !== 'string' || (v.minutes !== 15 && v.minutes !== 10) || typeof v.index !== 'number') return null
+  const logged = Array.isArray(v.logged) ? v.logged.filter((id): id is StepId => STEP_IDS.includes(id)) : []
+  return { date: v.date, minutes: v.minutes, index: v.index, logged, noMic: v.noMic === true, passed: v.passed === true, newChord: strOrNull(v.newChord) }
+}
+
+function readHistory(v: unknown): NightRecord[] {
+  if (!Array.isArray(v)) return []
+  return v.filter(isRecord).flatMap((night) =>
+    typeof night.date === 'string'
+      ? [{ date: night.date, minutes: num(night.minutes, 0), logs: Array.isArray(night.logs) ? night.logs.filter((l): l is string => typeof l === 'string') : [] }]
+      : [],
+  )
+}
+
+function readCounts(v: unknown) {
+  const entries = isRecord(v) ? Object.entries(v) : []
+  return Object.fromEntries(entries.filter((e): e is [string, number] => typeof e[1] === 'number' && e[1] >= 0))
 }
 
 function readBpms(v: unknown) {
@@ -94,6 +128,18 @@ export function sanitize(raw: unknown): Progress {
     thresholdsRev: THRESHOLDS_REV,
     lastBackupOn: strOrNull(r.lastBackupOn),
     session: readSession(r.session),
+    streak: Math.max(0, num(r.streak, 0)),
+    streakBefore: Math.max(0, num(r.streakBefore, 0)),
+    lastSessionDate: strOrNull(r.lastSessionDate),
+    history: readHistory(r.history),
+    passCounts: readCounts(r.passCounts),
+    learnedCount: Math.max(curriculum.learned, Math.min(curriculum.chordOrder.length, num(r.learnedCount, curriculum.learned))),
+    setPasses: Math.max(0, num(r.setPasses, 0)),
+    patternLevel: Math.max(1, Math.min(patterns.length, num(r.patternLevel, 1))),
+    strumGood: Math.max(0, num(r.strumGood, 0)),
+    currentSong: strOrNull(r.currentSong),
+    theorySeen: Math.max(0, num(r.theorySeen, 0)),
+    theoryDate: strOrNull(r.theoryDate),
   }
 }
 
@@ -148,16 +194,16 @@ export function updateBpm(patternId: string, bpm: number) {
   updateSettings({ bpmByPattern: { ...state.settings.bpmByPattern, [patternId]: bpm } })
 }
 
+export function setCurrentSong(currentSong: string) {
+  commit({ ...state, currentSong })
+}
+
 export function updateThresholds(patch: Partial<Thresholds>) {
   commit({ ...state, thresholds: { ...state.thresholds, ...patch } })
 }
 
 export function markBackedUp(on: string) {
   commit({ ...state, lastBackupOn: on })
-}
-
-export function saveSession(session: SavedSession | null) {
-  commit({ ...state, session })
 }
 
 function subscribe(listener: () => void) {

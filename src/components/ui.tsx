@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import type { LogState } from '../engine/session'
 import { ChevronLeft } from './icons'
 
 export function BackBar({ label, title, onBack, children }: {
@@ -61,11 +62,11 @@ export function Segmented<T extends string | number>({ label, value, options, on
   )
 }
 
-export function Logs({ total, done, lit = 0 }: { total: number; done: number; lit?: number }) {
+export function Logs({ states }: { states: LogState[] }) {
   return (
     <div className="logs" aria-hidden="true">
-      {Array.from({ length: total }, (_, i) => (
-        <span key={i} className={`log ${i < done ? 'done' : i < done + lit ? 'lit' : 'unlit'}`} />
+      {states.map((state, i) => (
+        <span key={i} className={`log ${state}`} />
       ))}
     </div>
   )

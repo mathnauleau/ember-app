@@ -1,0 +1,5 @@
+[
+  { "id": "spider-up", "name": "Spider walk", "sub": "Wakes up your fingers.", "order": "up", "bpm": 60 },
+  { "id": "spider-down", "name": "Spider climb", "sub": "The same walk, thin string to thick.", "order": "down", "bpm": 60 },
+  { "id": "spider-reach", "name": "Long reach", "sub": "Stretches the little finger gently.", "order": "reach", "bpm": 54 }
+]

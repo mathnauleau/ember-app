@@ -1,0 +1,9 @@
+[
+  { "id": "evening-road", "title": "Evening Road", "origin": "Ember original", "bpm": 72, "bars": ["Em", "Em", "Am", "Em", "Am", "Am", "Em", "Em"] },
+  { "id": "shady-grove", "title": "Shady Grove", "origin": "Traditional", "bpm": 76, "bars": ["Em", "Em", "D", "Em", "Em", "Em", "D", "Em"] },
+  { "id": "drunken-sailor", "title": "Drunken Sailor", "origin": "Traditional", "bpm": 84, "bars": ["Em", "Em", "D", "D", "Em", "Em", "D", "Em"] },
+  { "id": "wayfaring-stranger", "title": "Wayfaring Stranger", "origin": "Traditional", "bpm": 66, "bars": ["Am", "Am", "Dm", "Am", "Am", "Am", "E", "Am"] },
+  { "id": "oh-susanna", "title": "Oh Susanna", "origin": "Traditional", "bpm": 88, "bars": ["G", "G", "G", "D", "G", "G", "D", "G"] },
+  { "id": "swing-low", "title": "Swing Low", "origin": "Traditional", "bpm": 70, "bars": ["G", "G", "C", "G", "G", "G", "D", "G"] },
+  { "id": "red-river-valley", "title": "Red River Valley", "origin": "Traditional", "bpm": 76, "bars": ["G", "G", "G", "D", "D", "D", "D", "G"] }
+]

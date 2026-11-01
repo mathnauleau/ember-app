@@ -33,12 +33,13 @@ export const ONSET = {
   minEnergy: 1e-7, // ignores tiny rises in a silent room
   refractoryMs: 50, // one strum, one onset
   baselineMs: 150, // how long the recent average remembers
+  peakFrames: 4, // a strum's strength is its peak over this many frames, about 10 ms
 }
 
 export const TIMING = {
   minMatched: 4, // fewer matched strums in a bar means no feedback
   clickLeakMs: 20, // window around a click's arrival where an onset may be the click itself
-  clickLeakRatio: 0.5, // inside it, an onset must be this loud relative to off-click strums
+  clickLeakRatio: 0.2, // inside it, an onset must have this much of the off-click strums' energy
   clickHz: 1000,
   accentHz: 1500,
   clickSeconds: 0.03,

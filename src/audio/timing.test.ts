@@ -57,6 +57,17 @@ describe('onset detector', () => {
     expect(detect(clickTrain(times, 4, 0.01))).toHaveLength(times.length)
   })
 
+  it('reports the same strength wherever a strum falls against the frames', () => {
+    const strengths = [0, 40, 80, 120].map((shift) => {
+      const signal = clickTrain([1 + shift / SAMPLE_RATE], 2)
+      const detector = new OnsetDetector(SAMPLE_RATE)
+      const found = []
+      for (let at = 0; at < signal.length; at += 128) found.push(...detector.process(signal.subarray(at, at + 128), at))
+      return found[0].strength
+    })
+    expect(Math.max(...strengths) / Math.min(...strengths)).toBeLessThan(2)
+  })
+
   it('uses a hop short enough for timing feedback', () => {
     expect((ONSET.hopSize / SAMPLE_RATE) * 1000).toBeLessThan(5)
   })
@@ -101,6 +112,12 @@ describe('strum timing', () => {
   it('never treats a bare click leaking into the mic as playing', () => {
     const leak = slots.filter((s) => s.click).map((s) => ({ time: s.time + 0.03, strength: 0.05 }))
     expect(barVerdict(matchOnsets(leak, slots, { ...options, latencyS: 0.03 }), 70)).toBeNull()
+  })
+
+  it('keeps soft on-beat strums when one up-strum is the only reference', () => {
+    const steady = ['D', '_', 'D', '_', 'D', '_', 'D', 'U'].map((p, i) => ({ time: 10 + i * eighthS, strum: p !== '_', click: i % 2 === 0 }))
+    const onsets = steady.filter((s) => s.strum).map((s) => ({ time: s.time, strength: s.click ? 0.4 : 1 }))
+    expect(barVerdict(matchOnsets(onsets, steady, options), 70)?.verdict).toBe('on')
   })
 
   it('keeps on-click strums that are as loud as the rest, drops quiet leaks', () => {
